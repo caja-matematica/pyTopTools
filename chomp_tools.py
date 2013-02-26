@@ -318,8 +318,8 @@ if __name__ == "__main__":
     start = time.time()
 
     stack_height = 2
-    chomp_path = '/data/CT_Firn_Sample/chomp_files/'
-    path = '/data/CT_Firn_Sample/output23-10-3/'
+    chomp_path = '/sciclone/data/jberwald/CT_Firn_Sample/chomp_files/'
+    path = '/sciclone/data/jberwald/CT_Firn_Sample/output23-10-3/'
     prefix = 'K09b-23-10-'
     
     ## Write Chomp-readable files for 3D blocks

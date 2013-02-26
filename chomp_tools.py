@@ -11,7 +11,7 @@ except ImportError:
     print "We'll try to continue..."
 import time
 from collections import deque
-from scipy.stats import linregress
+#from scipy.stats import linregress
 # Python image libary
 try:
     from PIL import Image  

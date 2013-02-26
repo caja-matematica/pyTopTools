@@ -205,7 +205,7 @@ def extract_betti( fname, betti_file ):
           .betti files hold the truncated output as produced in 
     """
     # open and read chomp-produced data file
-    with open( fname + '.cbetti', 'r' ) as fh:
+    with open( fname, 'r' ) as fh:
         lines = fh.readlines()
     # grab the line with the Betti numbers
     if len( lines ) > 1:
@@ -225,13 +225,16 @@ def extract_betti( fname, betti_file ):
             line = str(i) + ' ' + betti_numbers[i] +'\n'
             fh.write( line )
 
-def read_betti_dir( fdir ):
+def read_betti_dir( fdir, suffix='.hom' ):
     """
     Read all .betti files in a directory and organize them for analysis.
     """
     dlist = os.listdir( fdir )
-    betti_list = [ f for f in dlist if f.endswith( '.betti' ) ]
-    betti_list.sort(key=R.natural_key)
+    betti_list = [ f for f in dlist if f.endswith( suffix ) ]
+    betti_list.sort(key=natural_key)
+
+    print "chomp output list", betti_list
+    
     # keep the frame numbers organized in a dict ?
     #betti = {}
     # nah, just list them
@@ -314,18 +317,28 @@ if __name__ == "__main__":
 
     start = time.time()
 
-    stack_height = 20
+    stack_height = 2
     chomp_path = '/data/CT_Firn_Sample/chomp_files/'
     path = '/data/CT_Firn_Sample/output23-10-3/'
     prefix = 'K09b-23-10-'
-    frames = []
-    for base in range( 3200, 3500, 20 ):
+    
+    ## Write Chomp-readable files for 3D blocks
+
+    for base in range( 3200, 3204, stack_height ):
+        frames = []
+        # list of frames to stack
         for x in range( stack_height ):
             num = base + x
             frames.append( path + prefix + str( num ) + '.bmp' )
-            stack = stack_images( frames )
-            array2chomp( stack, chomp_path + prefix[:-1] + \
-                         'w' + str( stack_height ) + '.cub' )
+            
+        print "Stacking from base:", base
+        stack = stack_images( frames )
+        cubfile = chomp_path + prefix[:-1] + '_b' + str( base ) + '_w' +\
+            str( stack_height ) 
+        array2chomp( stack, cubfile + '.cub' )
+
+        # Now compute homology for each block
+        run_chomp( cubfile + '.cub', cubfile + '.hom'  )
 
     
     print "Time:", time.time() - start

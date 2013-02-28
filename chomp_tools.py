@@ -317,28 +317,31 @@ if __name__ == "__main__":
 
     start = time.time()
 
-    stack_height = 2
-    chomp_path = '/sciclone/data/jberwald/CT_Firn_Sample/chomp_files/'
-    path = '/sciclone/data/jberwald/CT_Firn_Sample/output23-10-3/'
+    stack_height = [10,20,30,40]
+    chomp_path = '/sciclone/data10/jberwald/CT_Firn_Samples/chomp_files/'
+    path = '/sciclone/data10/jberwald/CT_Firn_Samples/output23-10-3/'
     prefix = 'K09b-23-10-'
     
     ## Write Chomp-readable files for 3D blocks
 
-    for base in range( 3200, 3204, stack_height ):
-        frames = []
-        # list of frames to stack
-        for x in range( stack_height ):
-            num = base + x
-            frames.append( path + prefix + str( num ) + '.bmp' )
-            
-        print "Stacking from base:", base
-        stack = stack_images( frames )
-        cubfile = chomp_path + prefix[:-1] + '_b' + str( base ) + '_w' +\
-            str( stack_height ) 
-        array2chomp( stack, cubfile + '.cub' )
+    for height in stack_height:
+        for base in range( 3200, 3700, height ):
+            frames = []
+            # list of frames to stack
+            for x in range( height ):
+                num = base + x
+                frames.append( path + prefix + str( num ) + '.bmp' )
+                
+            print "Stacking from base:", base
+            stack = stack_images( frames )
+            # h = 
+            cubfile = chomp_path + prefix[:-1] + \
+                '_b' + str( base ) + \
+                '_h' + str( height ) 
+            array2chomp( stack, cubfile + '.cub' )
 
         # Now compute homology for each block
-        run_chomp( cubfile + '.cub', cubfile + '.hom'  )
+#        run_chomp( cubfile + '.cub', cubfile + '.hom'  )
 
     
     print "Time:", time.time() - start

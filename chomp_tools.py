@@ -164,7 +164,7 @@ def pix2array( fname, dim=2 ):
                 rows.append( [int( x[0][1:] ), int( x[1] ), int( x[2][:-1] )] )
     return numpy.array( rows, dtype=numpy.int )
 
-def stack_images( list_of_frames, val=0 ):
+def stack_images( list_of_frames, height, val=0 ):
     """
     PIL tries to guess the file type from the extension.
 
@@ -184,7 +184,6 @@ def stack_images( list_of_frames, val=0 ):
         frames.append( arr )
 
     # assume each frame is the same size
-    size = frames[0].shape[0]
     frames = numpy.vstack( frames )
 
     # 2D corner anchors go in first columns
@@ -192,7 +191,7 @@ def stack_images( list_of_frames, val=0 ):
     stack[:,:-1] = frames
 
     # append the z values to each frame in the sequence
-    map( lambda i : stack[i*size:(i+1)*size,-1].fill( i ),
+    map( lambda i : stack[i*height:(i+1)*height,-1].fill( i ),
          xrange( len( list_of_frames ) )
          )
     return stack
@@ -319,9 +318,13 @@ if __name__ == "__main__":
     start = time.time()
 
     stack_height = [10]#, 20]# ,30,40]
-    chomp_path = '/sciclone/data10/jberwald/CT_Firn_Samples/chomp_files/'
-    path = '/sciclone/data10/jberwald/CT_Firn_Samples/output23-10-3/'
+
+    path = '/data/CT_Firn_Sample/output23-10-3/'
     prefix = 'K09b-23-10-'
+    
+    # chomp_path = '/sciclone/data10/jberwald/CT_Firn_Samples/chomp_files/'
+    # path = '/sciclone/data10/jberwald/CT_Firn_Samples/output23-10-3/'
+    # prefix = 'K09b-23-10-'
     
     ## Write Chomp-readable files for 3D blocks
 
@@ -334,7 +337,7 @@ if __name__ == "__main__":
                 frames.append( path + prefix + str( num ) + '.bmp' )
                 
             print "Stacking from base:", base
-            stack = stack_images( frames )
+            stack = stack_images( frames, height )
             print "STACK", stack
             # h = 
             cubfile = chomp_path + prefix[:-1] + \
@@ -343,7 +346,7 @@ if __name__ == "__main__":
             array2chomp( stack, cubfile + '.cub' )
 
             # Now compute homology for each block
-            run_chomp( cubfile + '.cub', cubfile + '.hom'  )
+            # run_chomp( cubfile + '.cub', cubfile + '.hom'  )
 
     
     print "Time:", time.time() - start

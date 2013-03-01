@@ -313,11 +313,12 @@ def plot_spectrum( data ):
  
 if __name__ == "__main__":
 
+
     import time
 
     start = time.time()
 
-    stack_height = [10,20,30,40]
+    stack_height = [10]#, 20]# ,30,40]
     chomp_path = '/sciclone/data10/jberwald/CT_Firn_Samples/chomp_files/'
     path = '/sciclone/data10/jberwald/CT_Firn_Samples/output23-10-3/'
     prefix = 'K09b-23-10-'
@@ -325,7 +326,7 @@ if __name__ == "__main__":
     ## Write Chomp-readable files for 3D blocks
 
     for height in stack_height:
-        for base in range( 3200, 3700, height ):
+        for base in [3310]:#range( 3200,  3400, height ):
             frames = []
             # list of frames to stack
             for x in range( height ):
@@ -334,14 +335,15 @@ if __name__ == "__main__":
                 
             print "Stacking from base:", base
             stack = stack_images( frames )
+            print "STACK", stack
             # h = 
             cubfile = chomp_path + prefix[:-1] + \
                 '_b' + str( base ) + \
                 '_h' + str( height ) 
             array2chomp( stack, cubfile + '.cub' )
 
-        # Now compute homology for each block
-#        run_chomp( cubfile + '.cub', cubfile + '.hom'  )
+            # Now compute homology for each block
+            run_chomp( cubfile + '.cub', cubfile + '.hom'  )
 
     
     print "Time:", time.time() - start

@@ -350,45 +350,70 @@ if __name__ == "__main__":
     top = 3220
     
     
+    if 0:
+        for height in stack_height:
 
-    for height in stack_height:
-
-        # pool.append( job_server.submit( chomp_stack,
-        #                                 ( bottom,
-        #                                   top,
-        #                                   height,
-        #                                   path,
-        #                                   chomp_path,
-        #                                   prefix ),
-        #                                 depfuncs = ( stack_images, array2chomp,
-        #                                              run_chomp )
-        #                                 ) )
-                                    
-                                         
+            # pool.append( job_server.submit( chomp_stack,
+            #                                 ( bottom,
+            #                                   top,
+            #                                   height,
+            #                                   path,
+            #                                   chomp_path,
+            #                                   prefix ),
+            #                                 depfuncs = ( stack_images, array2chomp,
+            #                                              run_chomp )
+            #                                 ) )
 
 
+
+
+
+            print "Stack height:", height
+            for base in [3310, 3320]:#range( 3200,  3400, height ):
+                frames = []
+                # list of frames to stack
+                for x in range( height ):
+                    num = base + x
+                    frames.append( path + prefix + str( num ) + '.bmp' )
+
+                print "    Stacking from base:", base
+                stack = stack_images( frames, height )
+                cubfile = chomp_path + prefix[:-1] + \
+                    '_b' + str( base ) + \
+                    '_h' + str( height ) 
+
+                # Convert bmp files to array, stack them, write them to
+                # chomp-readable format.
+                array2chomp( stack, cubfile + '.cub' )
+
+                # Now compute homology for each block
+                run_chomp( cubfile + '.cub', cubfile + '.hom'  )
+                extract_betti( cubfile + '.hom' )
+            print ""
+
+        print "Time:", time.time() - start
+
+    if 1:
         
-        print "Stack height:", height
-        for base in [3310, 3320]:#range( 3200,  3400, height ):
-            frames = []
-            # list of frames to stack
-            for x in range( height ):
-                num = base + x
-                frames.append( path + prefix + str( num ) + '.bmp' )
-                
-            print "    Stacking from base:", base
-            stack = stack_images( frames, height )
-            cubfile = chomp_path + prefix[:-1] + \
+        #for height in stack_height:
+        height = 10
+        dim = 1
+        bettis = []
+        for base in range( 3310,  3330, height ):
+            betti_file = chomp_path + prefix[:-1] + \
                 '_b' + str( base ) + \
-                '_h' + str( height ) 
+                '_h' + str( height ) + \
+                '.betti'
+            print betti_file
+            bnums = numpy.loadtxt( betti_file, dtype=numpy.uint8 )
+            print bnums
+            bettis.append( bnums[dim][1] )
 
-            # Convert bmp files to array, stack them, write them to
-            # chomp-readable format.
-            array2chomp( stack, cubfile + '.cub' )
-        
-            # Now compute homology for each block
-            run_chomp( cubfile + '.cub', cubfile + '.hom'  )
-            extract_betti( cubfile + '.hom' )
-        print ""
-    
-    print "Time:", time.time() - start
+        fig = plt.figure()
+        ax = fig.gca()
+        ax.plot( bettis, 'bo' )
+        ax.set_xlabel( "Block number (height="+str(height)+")" )
+        ax.set_ylabel( r"$\beta_{"+str( dim )+"}$" )
+        ax.set_xlim( -1, len(bettis) )
+        ax.set_ylim( min(bettis)-1, max(bettis)+1 )
+        plt.show()

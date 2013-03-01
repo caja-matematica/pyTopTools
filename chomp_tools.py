@@ -329,7 +329,7 @@ if __name__ == "__main__":
 
     start = time.time()
 
-    stack_height = [10, 20]#, 30]
+    stack_height = [10, 20, 30]
 
 #    path = '/data/CT_Firn_Sample/output23-10-3/'
 #    chomp_path = '/data/CT_Firn_Sample/chomp_files/'
@@ -343,12 +343,12 @@ if __name__ == "__main__":
     ## Write Chomp-readable files for 3D blocks
 
     #parallelize this stuff
-    ncpus = len( stack_height )
-    job_server = pp.Server( ncpus, ppservers=() )   
-    pool = []
+#    ncpus = len( stack_height )
+#    job_server = pp.Server( ncpus, ppservers=() )   
+#    pool = []
 
-    bottom = 3200
-    top = 3220
+#    bottom = 3200
+#    top = 3220
     
     
 
@@ -364,13 +364,9 @@ if __name__ == "__main__":
         #                                 depfuncs = ( stack_images, array2chomp,
         #                                              run_chomp )
         #                                 ) )
-                                    
-                                         
-
-
-        
+         
         print "Stack height:", height
-        for base in [3310, 3320]:#range( 3200,  3400, height ):
+        for base in range( 3200,  3400, height ):
             frames = []
             # list of frames to stack
             for x in range( height ):

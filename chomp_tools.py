@@ -101,7 +101,7 @@ def bmp2array( fname, val=0 ):
     return arr
 
 def bmp2chomp( fname, outname, val=0 ):
-    arr = bmp2chomp( fname, val )
+    arr = bmp2array( fname, val )    
     array2chomp( arr, outname )
    
 
@@ -122,9 +122,6 @@ def png2chomp( fname ):
     # filter the rgb format
     w2 = numpy.where( w[2] == 0 )[0]
     newarr = numpy.vstack( ( w[0][w2], w[1][w2] ) ).T
-
-    print newarr
-    
     chfile = fname.strip('png') + 'cub'
     # array2chomp( newarr, chfile )
             
@@ -179,29 +176,19 @@ def stack_images( list_of_frames, height, val=0 ):
     """
     # read in the frames
     frames = []
-    for f in list_of_frames:
+    for i, f in enumerate( list_of_frames ): 
         arr = bmp2array( f, val=0 )
-        frames.append( arr )
+        segment = numpy.empty( (arr.shape[0], 3), dtype=numpy.uint )
+        segment[:,:-1] = arr
+        segment[:,-1].fill( i )
+        frames.append( segment )
 
-    # assume each frame is the same size
-    frames = numpy.vstack( frames )
-
-    # 2D corner anchors go in first columns
-    stack = numpy.empty( (frames.shape[0], 3), dtype=numpy.uint )
-    stack[:,:-1] = frames
-
-    # append the z values to each frame in the sequence
-    map( lambda i : stack[i*height:(i+1)*height,-1].fill( i ),
-         xrange( len( list_of_frames ) )
-         )
-    return stack
+    return numpy.vstack( frames )
                     
-def extract_betti( fname, betti_file ):
+def extract_betti( fname, betti_file=None ):
     """
-    Read the betti numbers from the file containing the output from chomp.
-    
-          .cbetti files hold the complete output from the chomp program
-          .betti files hold the truncated output as produced in 
+    Read the betti numbers from the 'fname' containing the output from
+    chomp. Save raw Betti numbers
     """
     # open and read chomp-produced data file
     with open( fname, 'r' ) as fh:
@@ -212,14 +199,16 @@ def extract_betti( fname, betti_file ):
             if line.startswith( 'Betti' ):
                 # keep only the numbers
                 betti_numbers = line.strip().split()[2:]
-    # chomp output single line of betti number (the "other" chomp
-    # version...)
+    # chomp output single line of betti number (Shaun Harker's "other"
+    # chomp version...)
     else:
         betti_numbers = lines[0].strip().split()
     max_dim = len( betti_numbers )
     # open betti file and save generators. write the same format for
     # both chomp outputs to keep things consistent
-    with open( betti_file + '.betti', 'w' ) as fh:
+    if not betti_file:
+        betti_file = fname[:-3] + 'betti'
+    with open( betti_file, 'w' ) as fh:
         for i, b in enumerate( betti_numbers ):
             line = str(i) + ' ' + betti_numbers[i] +'\n'
             fh.write( line )
@@ -309,18 +298,43 @@ def plot_spectrum( data ):
     ax.loglog( freq, fp, label="Lin. reg.="+str(round( lrslope,1 )) )
     ax.legend( loc='lower left' )
     return fig
+
+###
+# parallel functions
+###
+def chomp_stack( low, high, height, path, chomp_path, prefix ):
+
+    for base in range( low,  high, height ):
+        frames = []
+        # list of frames to stack
+        for x in range( height ):
+            num = base + x
+            frames.append( path + prefix + str( num ) + '.bmp' )
+        stack = stack_images( frames, height )
+        cubfile = chomp_path + prefix[:-1] + \
+            '_b' + str( base ) + \
+            '_h' + str( height ) 
+        
+        # Convert bmp files to array, stack them, write them to
+        # chomp-readable format.
+        array2chomp( stack, cubfile + '.cub' )
+        
+        # Now compute homology for each block
+        run_chomp( cubfile + '.cub', cubfile + '.hom'  )
  
 if __name__ == "__main__":
 
-
+    import pp
     import time
 
     start = time.time()
 
-    stack_height = [10]#, 20]# ,30,40]
+    stack_height = [10, 20]#, 30]
 
 #    path = '/data/CT_Firn_Sample/output23-10-3/'
+#    chomp_path = '/data/CT_Firn_Sample/chomp_files/'
 #    prefix = 'K09b-23-10-'
+
     
     chomp_path = '/sciclone/data10/jberwald/CT_Firn_Samples/chomp_files/'
     path = '/sciclone/data10/jberwald/CT_Firn_Samples/output23-10-3/'
@@ -328,25 +342,54 @@ if __name__ == "__main__":
     
     ## Write Chomp-readable files for 3D blocks
 
+    #parallelize this stuff
+    ncpus = len( stack_height )
+    job_server = pp.Server( ncpus, ppservers=() )   
+    pool = []
+
+    bottom = 3200
+    top = 3220
+    
+    
+
     for height in stack_height:
-        for base in [3310]:#range( 3200,  3400, height ):
+
+        # pool.append( job_server.submit( chomp_stack,
+        #                                 ( bottom,
+        #                                   top,
+        #                                   height,
+        #                                   path,
+        #                                   chomp_path,
+        #                                   prefix ),
+        #                                 depfuncs = ( stack_images, array2chomp,
+        #                                              run_chomp )
+        #                                 ) )
+                                    
+                                         
+
+
+        
+        print "Stack height:", height
+        for base in [3310, 3320]:#range( 3200,  3400, height ):
             frames = []
             # list of frames to stack
             for x in range( height ):
                 num = base + x
                 frames.append( path + prefix + str( num ) + '.bmp' )
                 
-            print "Stacking from base:", base
+            print "    Stacking from base:", base
             stack = stack_images( frames, height )
-            print "STACK", stack
-            # h = 
             cubfile = chomp_path + prefix[:-1] + \
                 '_b' + str( base ) + \
                 '_h' + str( height ) 
+
+            # Convert bmp files to array, stack them, write them to
+            # chomp-readable format.
             array2chomp( stack, cubfile + '.cub' )
-
+        
             # Now compute homology for each block
-            # run_chomp( cubfile + '.cub', cubfile + '.hom'  )
-
+            run_chomp( cubfile + '.cub', cubfile + '.hom'  )
+            extract_betti( cubfile + '.hom' )
+        print ""
     
     print "Time:", time.time() - start

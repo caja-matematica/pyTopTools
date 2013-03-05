@@ -366,8 +366,8 @@ if __name__ == "__main__":
             #                                 ) )
 
          
-               print "Stack height:", height
-            for base in [3310, 3320]:#range( 3200,  3400, height ):
+            print "Stack height:", height
+            for base in range( 3500,  3700, height ):
                 frames = []
                 # list of frames to stack
                 for x in range( height ):
@@ -392,26 +392,40 @@ if __name__ == "__main__":
         print "Time:", time.time() - start
 
     if 1:
-        
-        #for height in stack_height:
-        height = 10
-        dim = 1
-        bettis = []
-        for base in range( 3310,  3330, height ):
-            betti_file = chomp_path + prefix[:-1] + \
-                '_b' + str( base ) + \
-                '_h' + str( height ) + \
-                '.betti'
-            print betti_file
-            bnums = numpy.loadtxt( betti_file, dtype=numpy.uint8 )
-            print bnums
-            bettis.append( bnums[dim][1] )
+        for height in stack_height:
+#        height = 10
+            low = 3200
+            high = 3400
+#            low = 3500
+#            high = 3700
+            for dim in [0,1,2]:
+                bettis = []
+                for base in range( low,  high, height ):
+                    betti_file = chomp_path + prefix[:-1] + \
+                        '_b' + str( base ) + \
+                        '_h' + str( height ) + \
+                        '.betti'
+                    bnums = numpy.loadtxt( betti_file, dtype=numpy.uint8 )
+                    bettis.append( bnums[dim][1] )
 
-        fig = plt.figure()
-        ax = fig.gca()
-        ax.plot( bettis, 'bo' )
-        ax.set_xlabel( "Block number (height="+str(height)+")" )
-        ax.set_ylabel( r"$\beta_{"+str( dim )+"}$" )
-        ax.set_xlim( -1, len(bettis) )
-        ax.set_ylim( min(bettis)-1, max(bettis)+1 )
-        plt.show()
+                B = numpy.asarray( bettis, dtype=int )
+
+                fig = plt.figure()
+                ax = fig.gca()
+                ax.plot( B, 'bo' )
+                # draw a dashed line at the mean, same xlimits as below
+                ax.hlines( B.mean(), -1, len(B), linestyle='dashed', colors='g', linewidth=2 )
+
+                ax.set_title( r'$\beta_{'+str(dim)+'}$ for blocks of height='+\
+                                  str(height)+'\nbetween frame '+str(low)+\
+                                  ' and '+str(high) )
+                ax.set_xlabel( "Block number (height="+str(height)+")" )
+                ax.set_ylabel( r"$\beta_{"+str( dim )+"}$" )
+                ax.set_xlim( -1, len(B) )
+                ax.set_ylim( B.min() - 1, B.max() + 1 )
+
+                fig_prefix = '/sciclone/data10/jberwald/CT_Firn_Samples/figures/'
+                figname = 'binary_'+str( low )+ '_' + str( high ) +\
+                    '_h'+str( height )+ '_d'+str( dim ) + '.png'
+                fig.savefig( fig_prefix + figname, transparent=True )
+                plt.close( fig )

@@ -75,14 +75,12 @@ class Cell( object ):
         invC[ thresh ] = 0
         return np.asarray( invC, dtype=np.uint )
         
-
     def write_frame_npy( self, fnum ):
         """
         frames : list of frames (numpy matrices) to save to disk
         """
         np.save( self.fname + under + str( frame_num ) + '.npy', self.frames[ fnum ] )
     
-
     def write_perseus( self, frame, outname ):
         if type( frame ) is int:
             rn.write_sparse_array( self.frames[ fnum ], outname )
@@ -92,8 +90,8 @@ class Cell( object ):
     def run_perseus( self, pers_in, pers_out ):
         rpers.perseus( pers_in, pers_out )
 
-    def draw_persdia( self, fname ):
-        rpost.plot_diagram_std( fname )
+    def draw_persdia( self, fname, **args ):
+        rpost.plot_diagram_std( fname, **args )
 
 
 if __name__ == "__main__":

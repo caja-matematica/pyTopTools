@@ -321,4 +321,111 @@ def chomp_stack( low, high, height, path, chomp_path, prefix ):
         
         # Now compute homology for each block
         run_chomp( cubfile + '.cub', cubfile + '.hom'  )
+if __name__ == "__main__":
+    
+    import pp
+    import time
 
+    start = time.time()
+
+    stack_height = [10, 20, 30]
+
+#    path = '/data/CT_Firn_Sample/output23-10-3/'
+#    chomp_path = '/data/CT_Firn_Sample/chomp_files/'
+#    prefix = 'K09b-23-10-'
+
+    
+    chomp_path = '/sciclone/data10/jberwald/CT_Firn_Samples/chomp_files/'
+    path = '/sciclone/data10/jberwald/CT_Firn_Samples/output23-10-3/'
+    prefix = 'K09b-23-10-'
+    
+    ## Write Chomp-readable files for 3D blocks
+
+    #parallelize this stuff
+#    ncpus = len( stack_height )
+#    job_server = pp.Server( ncpus, ppservers=() )   
+#    pool = []
+
+#    bottom = 3200
+#    top = 3220
+    
+    
+    if 0:
+        for height in stack_height:
+
+            # pool.append( job_server.submit( chomp_stack,
+            #                                 ( bottom,
+            #                                   top,
+            #                                   height,
+            #                                   path,
+            #                                   chomp_path,
+            #                                   prefix ),
+            #                                 depfuncs = ( stack_images, array2chomp,
+            #                                              run_chomp )
+            #                                 ) )
+
+         
+            print "Stack height:", height
+            for base in range( 3500,  3700, height ):
+                frames = []
+                # list of frames to stack
+                for x in range( height ):
+                    num = base + x
+                    frames.append( path + prefix + str( num ) + '.bmp' )
+
+                print "    Stacking from base:", base
+                stack = stack_images( frames, height )
+                cubfile = chomp_path + prefix[:-1] + \
+                    '_b' + str( base ) + \
+                    '_h' + str( height ) 
+
+                # Convert bmp files to array, stack them, write them to
+                # chomp-readable format.
+                array2chomp( stack, cubfile + '.cub' )
+
+                # Now compute homology for each block
+                run_chomp( cubfile + '.cub', cubfile + '.hom'  )
+                extract_betti( cubfile + '.hom' )
+            print ""
+
+        print "Time:", time.time() - start
+
+    if 1:
+        for height in stack_height:
+#        height = 10
+            low = 3200
+            high = 3400
+#            low = 3500
+#            high = 3700
+            for dim in [0,1,2]:
+                bettis = []
+                for base in range( low,  high, height ):
+                    betti_file = chomp_path + prefix[:-1] + \
+                        '_b' + str( base ) + \
+                        '_h' + str( height ) + \
+                        '.betti'
+                    bnums = numpy.loadtxt( betti_file, dtype=numpy.uint8 )
+                    bettis.append( bnums[dim][1] )
+
+                B = numpy.asarray( bettis, dtype=int )
+
+                fig = plt.figure()
+                ax = fig.gca()
+                ax.plot( B, 'bo' )
+                # draw a dashed line at the mean, same xlimits as below
+                ax.hlines( B.mean(), -1, len(B), linestyle='dashed', colors='g', linewidth=2 )
+
+                ax.set_title( r'$\beta_{'+str(dim)+'}$ for blocks of height='+\
+                                  str(height)+'\nbetween frame '+str(low)+\
+                                  ' and '+str(high) )
+                ax.set_xlabel( "Block number (height="+str(height)+")" )
+                ax.set_ylabel( r"$\beta_{"+str( dim )+"}$" )
+                ax.set_xlim( -1, len(B) )
+                ax.set_ylim( B.min() - 1, B.max() + 1 )
+
+                fig_prefix = '/sciclone/data10/jberwald/CT_Firn_Samples/figures/'
+                figname = 'binary_'+str( low )+ '_' + str( high ) +\
+                    '_h'+str( height )+ '_d'+str( dim ) + '.png'
+                fig.savefig( fig_prefix + figname, transparent=True )
+                plt.close( fig )
+>>>>>>> 9446549ffeda028b90c1035dae223a024aee0434

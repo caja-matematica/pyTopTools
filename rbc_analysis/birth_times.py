@@ -344,7 +344,7 @@ if __name__ == "__main__":
             pkl.dump( new_lb, fh )
 
     # EXTRACT THE K'TH BIRTH TIME
-    if 1: 
+    if 0: 
         prefix = '/sciclone/data10/jberwald/wyss/data/timeseries/'
         old_name = 'old_gen_ts_lb'
         new_name = 'new_gen_ts_lb'
@@ -360,19 +360,24 @@ if __name__ == "__main__":
                     pkl.dump( bt, fh )
                 
 
-    # PLOT HISITGRAM
-    if 0:
-        prefix = '/sciclone/data10/jberwald/wyss/data/timeseries/'        
-
-        with open(prefix+ 'new_orig_lb40-75.pkl') as fh:
-            new = pkl.load(fh)
-
-        with open(prefix+'old_orig_lb40-75.pkl') as fh:
-            old = pkl.load(fh)
+    # PLOT HISITGRAMS
+    if 1:
+        #prefix = '/sciclone/data10/jberwald/wyss/data/timeseries/'
+        prefix = '/data/jberwald/rbc/timeseries/'
 
         for val in lb:
-            fig = rh.plot_hist( new[val][:,0], nbins=200 )
-            fig = rh.plot_hist( old[val][:,0], nbins=200, fig=fig, color='r' )
+            with open( prefix+ 'new_gen_ts_lb'+str(val)+'_gen1.pkl' ) as fh:
+                new = pkl.load(fh)
+
+            with open( prefix+ 'old_gen_ts_lb'+str(val)+'_gen1.pkl' ) as fh:
+                old = pkl.load(fh)
+
+            new = numpy.array( new, dtype=int )
+            old = numpy.array( old, dtype=int )
+            
+            fig = rh.plot_hist( new, nbins=200 )
+            fig = rh.plot_hist( old, nbins=200, fig=fig, color='r' )
             ax = fig.gca()
             ax.set_title( 'All birth time for lifespans above '+str(val) )
-            fig.savefig( './all_birth_times_lb'+str(val)+'.png' )
+            plt.show()
+            fig.savefig( './data/birth_times_lb'+str(val)+'_gen1.png' )

@@ -206,8 +206,6 @@ def dir_list( fdir, betti=1 ):
     return theFiles
 
 
-
-
 def load_birth_times( old_hist = 'data/old_birth_times.pkl',
                       new_hist = 'data/new_birth_times.pkl' ):
     with open( old_hist ) as fh:
@@ -262,17 +260,22 @@ def characteristic_birth_time( fname, lower_bound, gen_num=1 ):
                 continue
     return btimes 
                 
-                
+def find_cell_avg( cell_concat, skip=3000 ):
+    """
+    Compute the average pixel height for a cell. 
+    """
+    cell = numpy.loadtxt( cell_concat, skiprows=skip )
+    return cell.mean() 
+    
 
 
 if __name__ == "__main__":
 
     lb = [40,45,50,55,60,65,70,75]
 
-    # CONSTRUCT ALL BIRTH TIMES OF GENERATORS ABOVE GIVEN THRESHOLD VALUE IN lb
+    # CONSTRUCT ALL BIRTH TIMES OF GENERATORS ABOVE GIVEN THRESHOLD VALUE IN lb,
+    # or compute averages
     if 0:
-
-
         new_prefix = '/data/PerseusData/PerseusOutput/original/2d_sparse/New/'
         old_prefix = '/data/PerseusData/PerseusOutput/original/2d_sparse/Old/'
         newlist = ['new_10', 'new_110125', 'new_130125', 'new_140125', 'new_3',
@@ -286,8 +289,6 @@ if __name__ == "__main__":
         # fig, ts = plot_hist_stack( frames, left_xlim=0.2, right_xlim=0.6, normed=False,
         #                            cutoff=0.2, ts_max=1000, skip=20, log=True )
 
-        # lower bound
-
         old_ts = {}
         for x in lb:
             for cell_dir in old_cells:
@@ -295,7 +296,6 @@ if __name__ == "__main__":
                 old_ts[ cell_dir ] = get_midrange_gens( cell_dir, x )
             with open( './timeseries/old_gen_ts_lb'+str(x)+'.pkl', 'w' ) as fh:
                 pkl.dump( old_ts, fh )
-
 
         new_ts = {}
         for x in lb:
@@ -358,10 +358,72 @@ if __name__ == "__main__":
                                                 gen_num=gen_num )
                 with open( prefix + cell_type + str(val) + '_gen'+str(gen_num)+'.pkl', 'w' ) as fh:
                     pkl.dump( bt, fh )
-                
+              
 
-    # PLOT HISITGRAMS
     if 1:
+        new_cells = [ 'new_110125-concatenated-ASCII',
+                      'new_140125-concatenated-ASCII',
+                      'new_130125-concatenated-ASCII',
+                      'new_40125-concatenated-ASCII',
+                      'new_50125-concatenated-ASCII' ]
+        old_cells = [ 'old_100125-concatenated-ASCII',
+                      'old_50125-concatenated-ASCII',
+                      'old_90125-concatenated-ASCII',
+                      'old_120125-concatenated-ASCII']  
+        prefix = '/sciclone/data10/jberwald/wyss/data/timeseries/'
+        old_name = 'old_gen_ts_lb'
+        new_name = 'new_gen_ts_lb'
+
+        gen_num = 1 # first birth time, or second,  or third, etc.
+
+        for cell_type in [old_name, new_name]:
+            for val in lb:
+                bt = characteristic_birth_time( prefix + cell_type + str(val) + '.pkl',
+                                                val,
+                                                gen_num=gen_num )
+                if avg_name in 
+                with open( prefix + cell_type + str(val) + '_gen'+str(gen_num)+'.pkl', 'w' ) as fh:
+                    pkl.dump( bt, fh )
+              
+
+
+
+
+    # MEANS
+    if 0: 
+
+        save_prefix = '/sciclone/data10/jberwald/wyss/data/timeseries/'
+        prefix = '/sciclone/data10/jberwald/wyss/data/Cells_Jesse/'
+        new_cells = [ 'new_110125-concatenated-ASCII',
+                      'new_140125-concatenated-ASCII',
+                      'new_130125-concatenated-ASCII',
+                      'new_40125-concatenated-ASCII',
+                      'new_50125-concatenated-ASCII' ]
+        old_cells = [ 'old_100125-concatenated-ASCII',
+                      'old_50125-concatenated-ASCII',
+                      'old_90125-concatenated-ASCII',
+                      'old_120125-concatenated-ASCII']
+                      
+        old_avgs = {}
+        for cellname in old_cells:
+            print "Getting average pixel height for ", cellname
+            old_avgs[ cellname ] = find_cell_avg( prefix + 'Old/' + cellname )
+        with open( save_prefix + 'old_avgs.pkl', 'w' ) as fh:
+            pkl.dump( old_avgs, fh )
+
+        new_avgs = {}
+        for cellname in new_cells:
+            print "Getting midrangeaverage pixel height for ", cellname
+            new_avgs[ cellname ] = find_cell_avg( prefix + 'New/' + cellname )
+        with open( save_prefix + 'new_avgs.pkl', 'w' ) as fh:
+            pkl.dump( new_avgs, fh )
+
+        print "AVERAGES:"
+        print "old:", old_avgs
+        print "new:", new_avgs
+
+    # PLOT HISTOGRAMS
+    if 0:
         #prefix = '/sciclone/data10/jberwald/wyss/data/timeseries/'
         prefix = '/data/jberwald/rbc/timeseries/'
 

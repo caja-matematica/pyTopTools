@@ -82,5 +82,6 @@ if __name__ == "__main__":
         B = pkl.load(fh)
 
     A.extend(B)
-    fig= rh.plot_hist(A,nbins=200)
-    fig= rh.plot_hist(Y,nbins=200)
+    fig= rh.plot_hist( A, nbins=200 )
+    fig= rh.plot_hist( Y, nbins=200 )
+

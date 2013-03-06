@@ -321,6 +321,8 @@ def chomp_stack( low, high, height, path, chomp_path, prefix ):
         
         # Now compute homology for each block
         run_chomp( cubfile + '.cub', cubfile + '.hom'  )
+
+        
 if __name__ == "__main__":
     
     import pp

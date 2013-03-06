@@ -1,8 +1,9 @@
 
 import numpy
-import os
+import os, re
 import matplotlib.pyplot as plt
 import cPickle as pkl
+from pyTopTools.rbc_analysis import rbc_histogram as rh
 
 
 def get_gens ( file, rmv='',data = ''):
@@ -195,6 +196,17 @@ def get_midrange_gens( cell, eps1, eps2=-1, normed=False):
     return cell_stats
 
 
+def dir_list( fdir, betti=1 ):
+    """
+    Returns a list of Perseus output files for given betti #.
+    """
+    dlist = os.listdir( fdir )
+    theFiles = [ fdir+f for f in dlist if f.endswith( '_'+str(betti)+'.txt' ) ]
+    theFiles.sort( key=natural_key )
+    return theFiles
+
+
+
 
 def load_birth_times( old_hist = 'data/old_birth_times.pkl',
                       new_hist = 'data/new_birth_times.pkl' ):
@@ -216,35 +228,151 @@ def load_all_bt( prefix='' ):
     return BT
 
 
+def natural_key(string_):
+    """
+    Use with frames.sort(key=natural_key)
+    """
+    return [int(s) if s.isdigit() else s for s in re.split(r'(\d+)', string_)]
+    
+def characteristic_birth_time( fname, lower_bound, gen_num=1 ):
+    """
+    fname -- full path to file containing birth times for robust generators. Eg., old_gen_ts_lb40.pkl
+
+    lower_bound -- the lower bound (eg., 40)
+    
+    gen_num -- 0 for first robust generator (probably the 'infinite' one), 1 for the first 'robust' generator, etc.
+
+    """
+    print "Getting birth times for ", fname 
+
+    with open( fname ) as fh:
+        cells = pkl.load( fh )
+    cell_vals = cells.values()
+
+    btimes = []
+    # for each cell, stack the generators into one array
+    for cell in cell_vals:
+        for i, frame in enumerate( cell ):
+            births = list( frame[:,0] )
+            births.sort()
+            try:
+                btimes.append( births[gen_num] )
+            except IndexError:
+                print "bad birth list:", i, births
+                continue
+    return btimes 
+                
+                
+
+
 if __name__ == "__main__":
 
-    new_prefix = '/data/PerseusData/PerseusOutput/original/2d_sparse/New/'
-    old_prefix = '/data/PerseusData/PerseusOutput/original/2d_sparse/Old/'
-    newlist = ['new_10', 'new_110125', 'new_130125', 'new_140125', 'new_3',
-               'new_4', 'new_40125', 'new_50125', 'new_6', 'new_60125', 'new_9']
-    oldlist = ['old_100125', 'old_120125', 'old_15', 'old_2', 'old_4000', 'old_4001',
-               'old_5',  'old_50125',  'old_6',  'old_7',  'old_8',  'old_9',  'old_90125']
-    new_cells = [ prefix + c + '/' for c in newlist ]
-    old_cells = [ prefix + c + '/' for c in oldlist ]
-    frames = [ dir_list( c ) for c in cells ]
-    # fig, ts = plot_hist_stack( frames, left_xlim=0.2, right_xlim=0.6, normed=False,
-    #                            cutoff=0.2, ts_max=1000, skip=20, log=True )
-
-    # lower bound
     lb = [40,45,50,55,60,65,70,75]
-    old_ts = {}
-    for x in lb:
-        for cell_dir in old_cells:
-            print "Getting midrange gens for ", cell_dir
-            old_ts[ cell_dir ] = get_midrange_ts( cell_dir, x )
-        with open( './timeseries/old_gen_ts_lb'+str(x)+'.pkl', 'w' ) as fh:
-            pkl.dump( old_ts, fh )
 
-    
-    new_ts = {}
-    for x in lb:
-        for cell_dir in new_cells:
-            print "Getting midrange gens for ", cell_dir
-            new_ts[ cell_dir ] = get_midrange_ts( cell_dir, x )
-        with open( './timeseries/new_gen_ts_lb'+str(x)+'.pkl', 'w' ) as fh:
-            pkl.dump( new_ts, fh )
+    # CONSTRUCT ALL BIRTH TIMES OF GENERATORS ABOVE GIVEN THRESHOLD VALUE IN lb
+    if 0:
+
+
+        new_prefix = '/data/PerseusData/PerseusOutput/original/2d_sparse/New/'
+        old_prefix = '/data/PerseusData/PerseusOutput/original/2d_sparse/Old/'
+        newlist = ['new_10', 'new_110125', 'new_130125', 'new_140125', 'new_3',
+                   'new_4', 'new_40125', 'new_50125', 'new_6', 'new_60125', 'new_9']
+        oldlist = ['old_100125', 'old_120125', 'old_15', 'old_2', 'old_4000', 'old_4001',
+                   'old_5',  'old_50125',  'old_6',  'old_7',  'old_8',  'old_9',  'old_90125']
+        new_cells = [ prefix + c + '/' for c in newlist ]
+        old_cells = [ prefix + c + '/' for c in oldlist ]
+
+        # frames = [ dir_list( c ) for c in cells ]
+        # fig, ts = plot_hist_stack( frames, left_xlim=0.2, right_xlim=0.6, normed=False,
+        #                            cutoff=0.2, ts_max=1000, skip=20, log=True )
+
+        # lower bound
+
+        old_ts = {}
+        for x in lb:
+            for cell_dir in old_cells:
+                print "Getting midrange gens for ", cell_dir
+                old_ts[ cell_dir ] = get_midrange_gens( cell_dir, x )
+            with open( './timeseries/old_gen_ts_lb'+str(x)+'.pkl', 'w' ) as fh:
+                pkl.dump( old_ts, fh )
+
+
+        new_ts = {}
+        for x in lb:
+            for cell_dir in new_cells:
+                print "Getting midrange gens for ", cell_dir
+                new_ts[ cell_dir ] = get_midrange_gens( cell_dir, x )
+            with open( './timeseries/new_gen_ts_lb'+str(x)+'.pkl', 'w' ) as fh:
+                pkl.dump( new_ts, fh )
+
+    if 0:
+        
+        prefix = '/sciclone/data10/jberwald/wyss/data/timeseries/'
+        old_name = 'old_gen_ts_lb'
+        new_name = 'new_gen_ts_lb'
+
+        old_lb = {}
+        for val in lb:
+            with open( prefix + old_name + str( val ) + '.pkl' ) as fh:
+                old = pkl.load( fh )
+                v = old.values()
+                # for each cell, stack the generators into one array
+                allv = [ numpy.vstack( x ) for x in v ]
+                # now stack all cell stacks into one array
+                allv = numpy.vstack( allv )
+            
+            old_lb[ val ] = allv
+
+        # dump all gens sorted by threshold to disk
+        with open( prefix + 'old_orig_lb40-75.pkl', 'w' ) as fh:
+            pkl.dump( old_lb, fh )
+
+        new_lb = {}
+        for val in lb:
+            with open( prefix + new_name + str( val ) + '.pkl' ) as fh:
+                new = pkl.load( fh )
+                v = new.values()
+                # for each cell, stack the generators into one array
+                allv = [ numpy.vstack( x ) for x in v ]
+                # now stack all cell stacks into one array
+                allv = numpy.vstack( allv )
+            
+            new_lb[ val ] = allv
+        
+        # dump all gens sorted by threshold to disk
+        with open( prefix + 'new_orig_lb40-75.pkl', 'w' ) as fh:
+            pkl.dump( new_lb, fh )
+
+    # EXTRACT THE K'TH BIRTH TIME
+    if 1: 
+        prefix = '/sciclone/data10/jberwald/wyss/data/timeseries/'
+        old_name = 'old_gen_ts_lb'
+        new_name = 'new_gen_ts_lb'
+
+        gen_num = 1 # first birth time, or second,  or third, etc.
+
+        for cell_type in [old_name, new_name]:
+            for val in lb:
+                bt = characteristic_birth_time( prefix + cell_type + str(val) + '.pkl',
+                                                val,
+                                                gen_num=gen_num )
+                with open( prefix + cell_type + str(val) + '_gen'+str(gen_num)+'.pkl', 'w' ) as fh:
+                    pkl.dump( bt, fh )
+                
+
+    # PLOT HISITGRAM
+    if 0:
+        prefix = '/sciclone/data10/jberwald/wyss/data/timeseries/'        
+
+        with open(prefix+ 'new_orig_lb40-75.pkl') as fh:
+            new = pkl.load(fh)
+
+        with open(prefix+'old_orig_lb40-75.pkl') as fh:
+            old = pkl.load(fh)
+
+        for val in lb:
+            fig = rh.plot_hist( new[val][:,0], nbins=200 )
+            fig = rh.plot_hist( old[val][:,0], nbins=200, fig=fig, color='r' )
+            ax = fig.gca()
+            ax.set_title( 'All birth time for lifespans above '+str(val) )
+            fig.savefig( './all_birth_times_lb'+str(val)+'.png' )

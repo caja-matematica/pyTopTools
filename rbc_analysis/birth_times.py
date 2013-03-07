@@ -365,21 +365,12 @@ if __name__ == "__main__":
                     pkl.dump( bt, fh )
               
 
-    if 0:
-        new_cells = [ 'new_110125-concatenated-ASCII',
-                      'new_140125-concatenated-ASCII',
-                      'new_130125-concatenated-ASCII',
-                      'new_40125-concatenated-ASCII',
-                      'new_50125-concatenated-ASCII' ]
-        old_cells = [ 'old_100125-concatenated-ASCII',
-                      'old_50125-concatenated-ASCII',
-                      'old_90125-concatenated-ASCII',
-                      'old_120125-concatenated-ASCII']  
+    if 1:
         prefix = '/sciclone/data10/jberwald/wyss/data/timeseries/'
         old_name = 'old_gen_ts_lb'
         new_name = 'new_gen_ts_lb'
 
-        gen_num = 1 # first birth time, or second,  or third, etc.
+        gen_nums = [2,3,4,5]  # first birth time, or second,  or third, etc.
 
         for cell_type in [old_name, new_name]:
             for val in lb:
@@ -389,6 +380,14 @@ if __name__ == "__main__":
                 with open( prefix + cell_type + str(val) + '_gen'+str(gen_num)+'.pkl', 'w' ) as fh:
                     pkl.dump( bt, fh )
 
+        for g in gen_nums:
+            for cell_type in [old_name, new_name]:
+                for val in lb:
+                    bt = characteristic_birth_time( prefix + cell_type + str(val) + '.pkl',
+                                                    val, gen_num=g )
+                    with open( prefix + cell_type + str(val) + '_gen'+str(g)+'.pkl', 'w' ) as fh:
+                        pkl.dump( bt, fh )
+              
 
     # MEANS
     if 0: 
@@ -428,19 +427,23 @@ if __name__ == "__main__":
         #prefix = '/sciclone/data10/jberwald/wyss/data/timeseries/'
         prefix = '/data/jberwald/rbc/timeseries/'
 
-        for val in lb:
-            with open( prefix+ 'new_gen_ts_lb'+str(val)+'_gen1.pkl' ) as fh:
-                new = pkl.load(fh)
+        gens = [2,3,4,5]
 
-            with open( prefix+ 'old_gen_ts_lb'+str(val)+'_gen1.pkl' ) as fh:
-                old = pkl.load(fh)
+        for g in gens:
+            for val in lb:
+                with open( prefix+ 'new_gen_ts_lb'+str(val)+'_gen'+str(g)+'.pkl' ) as fh:
+                    new = pkl.load(fh)
+                    
+                with open( prefix+ 'old_gen_ts_lb'+str(val)+'_gen'+str(g)+'.pkl' ) as fh:
+                    old = pkl.load(fh)
 
-            new = numpy.array( new, dtype=int )
-            old = numpy.array( old, dtype=int )
+                new = numpy.array( new, dtype=int )
+                old = numpy.array( old, dtype=int )
             
-            fig = rh.plot_hist( new, nbins=200 )
-            fig = rh.plot_hist( old, nbins=200, fig=fig, color='r' )
-            ax = fig.gca()
-            ax.set_title( 'All birth time for lifespans above '+str(val) )
-            plt.show()
-            fig.savefig( './data/birth_times_lb'+str(val)+'_gen1.png' )
+                fig = rh.plot_hist( new, nbins=200 )
+                fig = rh.plot_hist( old, nbins=200, fig=fig, color='r' )
+                ax = fig.gca()
+                ax.set_title( 'Birth times for robust generator #'+str(g)+\
+                                  'lifespans above '+str(val) )
+                plt.show()
+                fig.savefig( './data/birth_times_lb'+str(val)+'_gen'+str(g)+'.png' )

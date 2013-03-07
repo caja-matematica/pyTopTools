@@ -275,34 +275,39 @@ if __name__ == "__main__":
 
     # CONSTRUCT ALL BIRTH TIMES OF GENERATORS ABOVE GIVEN THRESHOLD VALUE IN lb,
     # or compute averages
-    if 0:
+    if 1:
         new_prefix = '/data/PerseusData/PerseusOutput/original/2d_sparse/New/'
         old_prefix = '/data/PerseusData/PerseusOutput/original/2d_sparse/Old/'
         newlist = ['new_10', 'new_110125', 'new_130125', 'new_140125', 'new_3',
                    'new_4', 'new_40125', 'new_50125', 'new_6', 'new_60125', 'new_9']
         oldlist = ['old_100125', 'old_120125', 'old_15', 'old_2', 'old_4000', 'old_4001',
                    'old_5',  'old_50125',  'old_6',  'old_7',  'old_8',  'old_9',  'old_90125']
+
+        new_avg_prefix = '/data/jberwald/wyss/data/Cells_Jesse/New/cells/'
+        old_avg_prefix = '/data/jberwald/wyss/data/Cells_Jesse/Old/cells/'
+        suffix = '-concatenated-ASCII'
+        
         new_cells = [ prefix + c + '/' for c in newlist ]
         old_cells = [ prefix + c + '/' for c in oldlist ]
 
-        # frames = [ dir_list( c ) for c in cells ]
-        # fig, ts = plot_hist_stack( frames, left_xlim=0.2, right_xlim=0.6, normed=False,
-        #                            cutoff=0.2, ts_max=1000, skip=20, log=True )
-
         old_ts = {}
         for x in lb:
-            for cell_dir in old_cells:
-                print "Getting midrange gens for ", cell_dir
-                old_ts[ cell_dir ] = get_midrange_gens( cell_dir, x )
-            with open( './timeseries/old_gen_ts_lb'+str(x)+'.pkl', 'w' ) as fh:
+            for cell in oldlist:
+                print "Getting midrange gens for ", cell
+                avg = find_cell_avg( old_avg_prefix + cell )
+                bt = get_midrange_gens( old_prefix + cell+'/', x )
+                old_ts[ cell ] = ( avg, bt )
+            with open( '/data/jberwald/wyss/data/timeseries/rbc/old_gen_avg_lb'+str(x)+'.pkl', 'w' ) as fh:
                 pkl.dump( old_ts, fh )
 
         new_ts = {}
         for x in lb:
-            for cell_dir in new_cells:
-                print "Getting midrange gens for ", cell_dir
-                new_ts[ cell_dir ] = get_midrange_gens( cell_dir, x )
-            with open( './timeseries/new_gen_ts_lb'+str(x)+'.pkl', 'w' ) as fh:
+            for cell in oldlist:
+                print "Getting midrange gens for ", cell
+                avg = find_cell_avg( new_avg_prefix + cell )
+                bt = get_midrange_gens( new_prefix + cell +'/', x )
+                new_ts[ cell ] = ( avg, bt )
+            with open( '/data/jberwald/wyss/data/rbc/timeseries/new_gen_avg_lb'+str(x)+'.pkl', 'w' ) as fh:
                 pkl.dump( new_ts, fh )
 
     if 0:
@@ -360,7 +365,7 @@ if __name__ == "__main__":
                     pkl.dump( bt, fh )
               
 
-    if 1:
+    if 0:
         new_cells = [ 'new_110125-concatenated-ASCII',
                       'new_140125-concatenated-ASCII',
                       'new_130125-concatenated-ASCII',
@@ -381,12 +386,8 @@ if __name__ == "__main__":
                 bt = characteristic_birth_time( prefix + cell_type + str(val) + '.pkl',
                                                 val,
                                                 gen_num=gen_num )
-                if avg_name in 
                 with open( prefix + cell_type + str(val) + '_gen'+str(gen_num)+'.pkl', 'w' ) as fh:
                     pkl.dump( bt, fh )
-              
-
-
 
 
     # MEANS

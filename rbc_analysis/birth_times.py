@@ -234,11 +234,13 @@ def natural_key(string_):
     
 def characteristic_birth_time( fname, lower_bound, gen_num=1 ):
     """
-    fname -- full path to file containing birth times for robust generators. Eg., old_gen_ts_lb40.pkl
+    fname -- full path to file containing birth times for robust
+    generators. Eg., old_gen_ts_lb40.pkl
 
     lower_bound -- the lower bound (eg., 40)
     
-    gen_num -- 0 for first robust generator (probably the 'infinite' one), 1 for the first 'robust' generator, etc.
+    gen_num -- 0 for first robust generator (probably the 'infinite'
+    one), 1 for the first 'robust' generator, etc.
 
     """
     print "Getting birth times for ", fname 
@@ -251,7 +253,12 @@ def characteristic_birth_time( fname, lower_bound, gen_num=1 ):
     # for each cell, stack the generators into one array
     for cell in cell_vals:
         for i, frame in enumerate( cell ):
-            births = list( frame[:,0] )
+            lifespans = numpy.diff( frame )
+            # argsort give indices of sorted array, from lowest to
+            # highest (take only largest 'gen_num' lifespans; final
+            # [::-1] reverses order)
+            sort_idx = lifespans.argsort()[-gen_num:][::-1]
+            births = list( frame[sort_idx,0] )
             births.sort()
             try:
                 btimes.append( births[gen_num] )
@@ -265,7 +272,33 @@ def find_cell_avg( cell_concat, skip=3000 ):
     Compute the average pixel height for a cell. 
     """
     cell = numpy.loadtxt( cell_concat, skiprows=skip )
-    return cell.mean() 
+    return cell.mean()
+
+def align_avg_birth_times( avgs, bts ):
+
+    alignment = {}
+    
+    avg_names = []
+    for x in avgs:
+        xs = x.split('-')[0]
+        avg_names.append( xs )
+
+    for x in bts:
+        xs = x.split('/')[-2]
+        if xs in avg_names:
+            alignment[ xs ] = bts[ x ]
+
+    return alignment
+    
+
+def shift_birth_times( birth_times, avgs ):
+    """
+    birth_times -- birth times of robust generators for all frames for
+    a single cell.
+
+    shift -- the average pixel value for the cell giving birth_times,
+    shift all generators by this amount as a way to normalize across cells.
+    """
     
 
 
@@ -275,7 +308,7 @@ if __name__ == "__main__":
 
     # CONSTRUCT ALL BIRTH TIMES OF GENERATORS ABOVE GIVEN THRESHOLD VALUE IN lb,
     # or compute averages
-    if 1:
+    if 0:
         new_prefix = '/data/PerseusData/PerseusOutput/original/2d_sparse/New/'
         old_prefix = '/data/PerseusData/PerseusOutput/original/2d_sparse/Old/'
         newlist = ['new_10', 'new_110125', 'new_130125', 'new_140125', 'new_3',
@@ -302,7 +335,7 @@ if __name__ == "__main__":
 
         new_ts = {}
         for x in lb:
-            for cell in oldlist:
+            for cell in newlist:
                 print "Getting midrange gens for ", cell
                 avg = find_cell_avg( new_avg_prefix + cell )
                 bt = get_midrange_gens( new_prefix + cell +'/', x )
@@ -364,13 +397,13 @@ if __name__ == "__main__":
                 with open( prefix + cell_type + str(val) + '_gen'+str(gen_num)+'.pkl', 'w' ) as fh:
                     pkl.dump( bt, fh )
               
-
-    if 1:
+    # GRAB GENERATOR NUMBER X 
+    if 0:
         prefix = '/sciclone/data10/jberwald/wyss/data/timeseries/'
-        old_name = 'old_gen_ts_lb'
-        new_name = 'new_gen_ts_lb'
+        old_name = 'oldgen_avgshift_lb'
+        new_name = 'newgen_avgshift_lb'
 
-        gen_nums = [2,3,4,5]  # first birth time, or second,  or third, etc.
+        gen_nums = [1,2,3,4,5]  # first birth time, or second,  or third, etc.
 
         for cell_type in [old_name, new_name]:
             for val in lb:
@@ -422,19 +455,23 @@ if __name__ == "__main__":
         print "old:", old_avgs
         print "new:", new_avgs
 
+
     # PLOT HISTOGRAMS
-    if 0:
+    if 1:
         #prefix = '/sciclone/data10/jberwald/wyss/data/timeseries/'
         prefix = '/data/jberwald/rbc/timeseries/'
 
-        gens = [2,3,4,5]
+        oldname = 'oldgen_avgshift_lb'
+        newname = 'newgen_avgshift_lb'        
+
+        gens = [1,2,3,4]
 
         for g in gens:
             for val in lb:
-                with open( prefix+ 'new_gen_ts_lb'+str(val)+'_gen'+str(g)+'.pkl' ) as fh:
+                with open( prefix+ newname +str(val)+'_gen'+str(g)+'_V2.pkl' ) as fh:
                     new = pkl.load(fh)
                     
-                with open( prefix+ 'old_gen_ts_lb'+str(val)+'_gen'+str(g)+'.pkl' ) as fh:
+                with open( prefix+ oldname +str(val)+'_gen'+str(g)+'_V2.pkl' ) as fh:
                     old = pkl.load(fh)
 
                 new = numpy.array( new, dtype=int )
@@ -444,6 +481,8 @@ if __name__ == "__main__":
                 fig = rh.plot_hist( old, nbins=200, fig=fig, color='r' )
                 ax = fig.gca()
                 ax.set_title( 'Birth times for robust generator #'+str(g)+\
-                                  'lifespans above '+str(val) )
+                                  ' (lifespan threshold = '+str(val)+')', fontsize=16 )
+                ax.set_xlabel( 'Birth time', fontsize=16 )
+                ax.set_ylabel( 'Number of generators', fontsize=16 )
                 plt.show()
-                fig.savefig( './data/birth_times_lb'+str(val)+'_gen'+str(g)+'.png' )
+                fig.savefig( './data/birth_times_lb'+str(val)+'_gen'+str(g)+'_V2.png' )

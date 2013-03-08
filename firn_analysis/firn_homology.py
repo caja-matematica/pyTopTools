@@ -5,7 +5,7 @@ import pp
 
 start = time.time()
 
-stack_height = [10, 20]#, 30]
+stack_height = [10, 20]#
 
 path = '/data/CT_Firn_Sample/output23-10-3/'
 chomp_path = '/data/CT_Firn_Sample/chomp_files/'

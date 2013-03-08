@@ -76,7 +76,7 @@ def hom_time_gaps( files, dim=0 ):
     # return time gaps
     return numpy.diff( w )
 
-def bmp2array( fname, val=0 ):
+def bmp2binary( fname, val=0 ):
     """
     Binary images only.
     
@@ -99,6 +99,26 @@ def bmp2array( fname, val=0 ):
     w = numpy.where( data == val )
     arr = numpy.array( zip( w[0], w[1] ) )
     return arr
+
+def bmp2array( fname, val=0 ):
+    """    
+    Load BMP using PIL. Assume 'fname' contains binary data. Extract
+    data array, shape correctly (will be funky bands otherwise). Use
+    array2chomp() to write PIL image data to disk.
+
+    fname -- location of BMP file
+
+    outname -- full path to output file in CHomP-readable format (see
+    array2chomp). The extension '.cub' is the one usually used for
+    cubical files readable by CHomP.
+
+    val -- 'on' value of binary image.
+    """
+    im = Image.open( fname )
+    s = im.size
+    data = numpy.array( im.getdata() )
+    data.resize( ( s[1], s[0] ) )
+    return data
 
 def bmp2chomp( fname, outname, val=0 ):
     arr = bmp2array( fname, val )    
@@ -323,6 +343,56 @@ def chomp_stack( low, high, height, path, chomp_path, prefix ):
         run_chomp( cubfile + '.cub', cubfile + '.hom'  )
 
         
+def run_mse( fname, dim=1, **args ):
+    """
+    Input:
+    -----
+
+    fname : path to 1D data file containing time series to
+    analyze. (This is slightly ugly since it reads in the 3D numpy
+    array, extracts the proper betti time series, save it to disk,
+    then runs MSE (sigh).)
+
+    **args:
+    -----
+
+    Eventually will correspond to MSE args (type 'mse --help' for more
+    info).
+    """
+    # read betti time series file
+    arr = numpy.load( fname )
+    arr = arr[:,dim,:]
+    # write 2D array to tmpfile
+    fs = fname.split('/')[:-1]
+    fs.append( 'tmpfile' )
+    tmpfile= slash.join( fs )
+    numpy.savetxt( tmpfile, arr[1] )
+
+    # form the command to pass to subprocess
+    outfile = fname.strip('.npy') + '_H'+str(dim)+'.mse'
+    cmd = 'mse <'+ tmpfile + '>'+outfile
+    try:
+        p = subprocess.Popen( cmd, shell=True )
+    except:
+        print "Problems calling MSE"
+        raise
+
+def mse_converter( fname ):
+    """
+    Convert data in .mse file to a more friendly format. 
+    """
+    lines = []
+    with open( fname ) as fh:
+        for line in fh.readlines():
+            if len(line) > 1:  # avoid empty lines
+                if line.startswith('m'):
+                    continue
+                # strip off \n and split on tabs
+                line = line.strip().split( '\t' )
+                lines.append( ( float(line[0]), float(line[1]) ) )
+    return numpy.array( lines )
+
+        
 if __name__ == "__main__":
     
     import pp
@@ -430,4 +500,4 @@ if __name__ == "__main__":
                     '_h'+str( height )+ '_d'+str( dim ) + '.png'
                 fig.savefig( fig_prefix + figname, transparent=True )
                 plt.close( fig )
->>>>>>> 9446549ffeda028b90c1035dae223a024aee0434
+

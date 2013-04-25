@@ -232,7 +232,7 @@ def natural_key(string_):
     """
     return [int(s) if s.isdigit() else s for s in re.split(r'(\d+)', string_)]
     
-def characteristic_birth_time( fname, lower_bound, gen_num=1 ):
+def characteristic_birth_time( data, gen_num=1, top=False, lspans=False ):
     """
     fname -- full path to file containing birth times for robust
     generators. Eg., old_gen_ts_lb40.pkl
@@ -242,30 +242,58 @@ def characteristic_birth_time( fname, lower_bound, gen_num=1 ):
     gen_num -- 0 for first robust generator (probably the 'infinite'
     one), 1 for the first 'robust' generator, etc.
 
-    """
-    print "Getting birth times for ", fname 
+    top -- bool. If True, grab the top gen_num robust generators, as
+    opposed to the default, which is to grab only the gen_num'th
+    generator.
 
-    with open( fname ) as fh:
-        cells = pkl.load( fh )
-    cell_vals = cells.values()
+    """
+    g = gen_num + 1 # account for 'infinite'
+    
+    try:
+        # data is a file name
+        with open( data ) as fh:
+            cells = pkl.load( fh )
+        cell_vals = cells.values()
+    except TypeError:
+        # in this case we assume that data contain a list of a single
+        # cell's generators in each frame
+        cell_vals = [ data ]
 
     btimes = []
+    
+    # save lifespans for testing separation of generators
+    if lspans:
+        LS = []
+        
     # for each cell, stack the generators into one array
     for cell in cell_vals:
         for i, frame in enumerate( cell ):
             lifespans = numpy.diff( frame )
+            L = lifespans.T[0]
+            if lspans:
+                L.sort() # in-place sort
+                LS.append( L )
             # argsort give indices of sorted array, from lowest to
             # highest (take only largest 'gen_num' lifespans; final
             # [::-1] reverses order)
-            sort_idx = lifespans.argsort()[-gen_num:][::-1]
+            sort_idx = L.argsort()[-g:][::-1]
             births = list( frame[sort_idx,0] )
-            births.sort()
+            births.sort()    
             try:
-                btimes.append( births[gen_num] )
+                if top:
+                    # excludes infinite generator which will come
+                    # first in the list.
+                    btimes.append( tuple(births[1:g]) )
+                else:
+                    btimes.append( births[gen_num] )
+                    
             except IndexError:
-                print "bad birth list:", i, births
+                #print "bad birth list:", i, births
                 continue
-    return btimes 
+    if lspans:
+        return btimes, LS
+    else:
+        return btimes
                 
 def find_cell_avg( cell_concat, skip=3000 ):
     """
@@ -314,7 +342,7 @@ if __name__ == "__main__":
         newlist = ['new_10', 'new_110125', 'new_130125', 'new_140125', 'new_3',
                    'new_4', 'new_40125', 'new_50125', 'new_6', 'new_60125', 'new_9']
         oldlist = ['old_100125', 'old_120125', 'old_15', 'old_2', 'old_4000', 'old_4001',
-                   'old_5',  'old_50125',  'old_6',  'old_7',  'old_8',  'old_9',  'old_90125']
+                   'old_5', 'old_50125', 'old_6', 'old_7', 'old_8', 'old_9', 'old_90125']
 
         new_avg_prefix = '/data/jberwald/wyss/data/Cells_Jesse/New/cells/'
         old_avg_prefix = '/data/jberwald/wyss/data/Cells_Jesse/Old/cells/'
@@ -421,7 +449,6 @@ if __name__ == "__main__":
                     with open( prefix + cell_type + str(val) + '_gen'+str(g)+'.pkl', 'w' ) as fh:
                         pkl.dump( bt, fh )
               
-
     # MEANS
     if 0: 
 
@@ -462,27 +489,56 @@ if __name__ == "__main__":
         prefix = '/data/jberwald/rbc/timeseries/'
 
         oldname = 'oldgen_avgshift_lb'
-        newname = 'newgen_avgshift_lb'        
+        newname = 'newgen_avgshift_lb'
 
-        gens = [1,2,3,4]
+        new_single = 'newgen_avgshift_lb40.pkl'
+        old_single = 'oldgen_avgshift_lb40.pkl'
 
-        for g in gens:
-            for val in lb:
+        new_cells = [ 'new_50125', 'new_40125', 'new_130125' ]
+        old_cells = [ 'old_100125', 'old_50125', 'old_90125' ]
+
+        gens = [1,2]#,3,4]
+        val = 40  # lower bound shouldn't matter, so just grab the lb=40 file
+
+        for c_new, c_old in zip( new_cells, old_cells ):
+            for g in gens:
+                #for val in lb:
                 with open( prefix+ newname +str(val)+'_gen'+str(g)+'_V2.pkl' ) as fh:
                     new = pkl.load(fh)
-                    
+
                 with open( prefix+ oldname +str(val)+'_gen'+str(g)+'_V2.pkl' ) as fh:
                     old = pkl.load(fh)
 
+                ####################
+                ## FOR OVERLAYING SINGLE CELLS
+                with open( prefix+ new_single ) as fh:
+                    a = pkl.load(fh)
+                    sing_new = a[ c_new ]
+
+                with open( prefix+ old_single ) as fh:
+                    b = pkl.load(fh)
+                    sing_old = b[ c_old ]
+
+                bt_new = characteristic_birth_time( sing_new, gen_num=g )
+                bt_new = numpy.array( bt_new )
+                bt_old = characteristic_birth_time( sing_old, gen_num=g )
+                bt_old = numpy.array( bt_old )
+                #
+                ####################
+
                 new = numpy.array( new, dtype=int )
                 old = numpy.array( old, dtype=int )
-            
-                fig = rh.plot_hist( new, nbins=200 )
-                fig = rh.plot_hist( old, nbins=200, fig=fig, color='r' )
+
+                fig = rh.plot_hist( new, nbins=100 )
+                fig = rh.plot_hist( old, nbins=100, fig=fig, color='r' )
+
+                fig = rh.plot_hist( bt_new, nbins=100, fig=fig, color='g' )
+                fig = rh.plot_hist( bt_old, nbins=100, fig=fig, color='y' )
+
                 ax = fig.gca()
-                ax.set_title( 'Birth times for robust generator #'+str(g)+\
-                                  ' (lifespan threshold = '+str(val)+')', fontsize=16 )
-                ax.set_xlabel( 'Birth time', fontsize=16 )
-                ax.set_ylabel( 'Number of generators', fontsize=16 )
+                # ax.set_title( r'Birth times for robust generator #'+str(g)+\
+                #                 ' (lifespan threshold = '+str(val)+')', fontsize=16 )
+                ax.set_xlabel( r'Birth threshold (' +c_new+' and '+ c_old +')', fontsize=16 )
+                ax.set_ylabel( r'Number of generators ($g='+str(g)+'$)', fontsize=16 )
                 plt.show()
-                fig.savefig( './data/birth_times_lb'+str(val)+'_gen'+str(g)+'_V2.png' )
+                fig.savefig( './data/birth_times_gen'+str(g)+'_' + c_old +'_'+c_new + '.png' )

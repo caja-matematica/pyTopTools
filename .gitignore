@@ -34,3 +34,4 @@ pip-log.txt
 *.txt
 *.svg
 *.pkl
+figures/

@@ -4,6 +4,7 @@ import matplotlib.mlab as mlab
 import numpy# as np
 import re
 import cPickle as pkl
+import tempfile
 try:
     import pp
 except ImportError:
@@ -343,15 +344,17 @@ def chomp_stack( low, high, height, path, chomp_path, prefix ):
         run_chomp( cubfile + '.cub', cubfile + '.hom'  )
 
         
-def run_mse( fname, dim=1, **args ):
+def run_mse( fname, **args ):
     """
     Input:
     -----
 
     fname : path to 1D data file containing time series to
-    analyze. (This is slightly ugly since it reads in the 3D numpy
-    array, extracts the proper betti time series, save it to disk,
-    then runs MSE (sigh).)
+    analyze. File can be .npy or .txt.
+
+    If .npy, then file is loaded and rewritten to disk as a tmp file
+    for mse input. Otherwise, if .txt (single column!), fname is
+    passed straight to mse.
 
     **args:
     -----
@@ -359,18 +362,16 @@ def run_mse( fname, dim=1, **args ):
     Eventually will correspond to MSE args (type 'mse --help' for more
     info).
     """
-    # read betti time series file
-    arr = numpy.load( fname )
-    arr = arr[:,dim,:]
-    # write 2D array to tmpfile
-    fs = fname.split('/')[:-1]
-    fs.append( 'tmpfile' )
-    tmpfile= slash.join( fs )
-    numpy.savetxt( tmpfile, arr[1] )
-
+    try:
+        data = numpy.load( fname )
+        fname = fname[:-3] + 'txt'
+        numpy.savetxt( fname, data )       
+    except IOError:
+        pass
+        
     # form the command to pass to subprocess
-    outfile = fname.strip('.npy') + '_H'+str(dim)+'.mse'
-    cmd = 'mse <'+ tmpfile + '>'+outfile
+    outfile = fname[:-3] + 'mse'
+    cmd = 'mse <'+ fname + '>'+outfile
     try:
         p = subprocess.Popen( cmd, shell=True )
     except:

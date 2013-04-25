@@ -9,7 +9,7 @@ from matplotlib.mlab import stineman_interp
 slash = '/'
 
 
-def plot_hist( ts, nbins=1000, color='b', xlim=None, alpha=0.6, fig=None ):
+def plot_hist( ts, nbins=1000, color='b', xlim=None, alpha=0.6, fig=None, **kwargs ):
     """
     ts -- single time series of values to bin.
 
@@ -27,13 +27,13 @@ def plot_hist( ts, nbins=1000, color='b', xlim=None, alpha=0.6, fig=None ):
     ax = fig.gca()
     if hasattr( ts, "__array__" ):
         n, bins, patches = ax.hist( ts, bins=nbins, color=color, log=True,
-                                    edgecolor='none', alpha=alpha )
+                                    edgecolor='none', alpha=alpha, **kwargs )
         plot_interp = False
     else:
         all_n = []
         for d in ts:
             n, bins, patches = ax.hist( d, bins=nbins, color=color, log=True,
-                                        edgecolor='none', alpha=alpha )
+                                        edgecolor='none', alpha=alpha, **kwargs )
             all_n.append( n )
 
         arr = numpy.asarray( all_n )

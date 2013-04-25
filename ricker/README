@@ -1,0 +1,3 @@
+reAP3_perseus_det.m   : process persesu over iterations. change flag for stochastic version.
+
+wave example: r=5, d=0.75, no extinction, threshold=ln(r) ( =ln(scale*r) ) (with scale=1), random IC (21 x 21)

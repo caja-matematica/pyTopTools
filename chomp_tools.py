@@ -28,18 +28,17 @@ def natural_key(string_):
     """
     return [int(s) if s.isdigit() else s for s in re.split(r'(\d+)', string_)]
 
-def run_chomp( fname, savename ):
+def run_chomp( fname ): #, savename ):
     """
     Call chomp to compute the betti numbers of the image in file fname.
 
     See http://chomp.rutgers.edu
     """
-    cmd = ['chomp', fname]
-    try:
-        with open( savename, 'w' ) as fh:
-            p = subprocess.call( cmd, stdout=fh )
+    try:      
+        p = subprocess.check_output( ["chomp-rutgers", fname] )
     except:
-        print "subprocess returned with code", p
+        print "subprocess returned with command: ", cmd
+    return p
 
 def hom_time_gaps( files, dim=0 ):
     """
@@ -151,6 +150,7 @@ def array2chomp( arr, savename ):
     Convert an array to chomp format, ( , , ). Write the resulting
     column of numbers to disk.
     """
+    arr = numpy.asarray( arr )
     rows = map( lambda x: str(x)+'\n', map( tuple, iter( arr ) ) ) 
     with open( savename, 'w' ) as fh:
         fh.writelines( rows )
@@ -205,6 +205,19 @@ def stack_images( list_of_frames, height, val=0 ):
         frames.append( segment )
 
     return numpy.vstack( frames )
+
+def extract_betti_string( chomp_out ):
+    """
+    chomp_out -- string output from chomp-rutgers
+    """
+    out = chomp_out
+    sout = out.split( '\n' )
+    for line in sout:
+        if line.startswith( 'Betti' ):
+            # keep only the numbers
+            # index=2 excludes the text
+            betti_numbers = line.strip().split()[2:]
+    return [ int( b ) for b in betti_numbers ]
                     
 def extract_betti( fname, betti_file=None ):
     """

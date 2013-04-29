@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 from pyTopTools import process_perseus as proc_pers
 from pyTopTools import persdia_sub_super as pd
 from pyTopTools import chomp_tools as chomp
+from pyTopTools.ricker import spatial
 
 class Ricker( object ):
     """
@@ -39,6 +40,7 @@ class Ricker( object ):
         self.dispersal = dispersal # possibly a vector of matrix of different values
         self.fitness = fitness # ditto
         self.ndim = ndim
+        self.iter_number = 0
         self._square = square
         self._verbose = verbose
         self._IC = IC
@@ -78,11 +80,29 @@ class Ricker( object ):
             str(self.fitness)+" and dispersal "+str(self.dispersal)+"."
         return s
 
-    def threshold( self, thresh ):
+    def threshold( self, thresh=-1 ):
         """
         Threshold the population matrix at 'thresh'.
+
+        If thresh == -1, use ln( fitness ).
         """
+        if thresh == -1:
+            thresh = np.log( self.fitness )
+        # find all entries above the threshold
         ma = np.ma.masked_less( self.population, thresh )
+        # return only the T/F mask
+        return ma.mask
+
+    def binarize( self, thresh=-1 ):
+        """
+        Threshold to get a binary array, with 1's where
+        self.population >= thresh. See threshold() for usage of
+        thresh.
+        """
+        mask = self.threshold( thresh )
+        z = np.ones_like( self.population, dtype=int )
+        z[mask] = 0
+        return z
 
     def abundance( self ):
         try:
@@ -109,6 +129,7 @@ class Ricker( object ):
                   ( self.dispersal / 4. ) * ( self.D * P )
         else:
             self.population = P
+        self.iter_number += 1 # keeps track for file names
             
     def save_pop( self, output_name ):
         """
@@ -139,17 +160,34 @@ class Ricker( object ):
             chomp_out = output + '.cbetti'
         else:
             chomp_out[:-4] + '.cbetti'
-        chomp.array2chomp( self.population, chomp_in )
+        binary = self.binarize()
+        cub = chomp.array2cub( binary )
+        chomp.write_cubical_file( cub, chomp_in )
         out = chomp.run_chomp( chomp_in )
         betti = chomp.extract_betti_string( out )
         return betti
 
-    def compute_persistence( self, persname, scale ):
+    def compute_persistence( self, persname, scale, shift_mean=False ):
         """
         Compute sub- and superlevel set cubical topological
         persistence on population matrix.
+
+        shift_mean : this will shift many values below zero, which we
+        probably do not want.
         """
-        proc_pers.perseus_sub_super( self.population, persname, scale )
+        if shift_mean:
+            pop = self.population - self.population.mean()
+        else:
+            pop = self.population
+        proc_pers.perseus_sub_super( pop, persname, scale )
+
+    def compute_moran( self ):
+        """
+        Computes Moran's coefficient for (local) spatial correlation.
+        """
+        S = spatial.Spatial( np.asarray(self.population) )
+        return S.get_moran_I()
+        
 
     def draw_persistence_diagram( self, fname ):
         """
@@ -185,32 +223,60 @@ def init_population( IC ):
         ic =np.loadtxt( IC ) 
     return ic
 
-def run( IC, tfinal, fit, disp, square=True, save_abundance=False,
-         betti_name=None ):
+def run( IC, tfinal, fit, disp, spin_up=0, ndim=1,
+         square=True, save_pop=False, save_abundance=False,
+         betti_name=None, pers_name=None, pers_scale=1, compute_moran=False ):
     """
-    betti_name -- prefix for chomp .cub and betti files
+    betti_name : prefix for chomp .cub and betti files
+
+    pers_name : path and name of persistence files for Perseus.
+
+    pers_scale : optional scaling of population matrix in persistence
+    computation. Necessary for Perseus's integer requirements.
+    
     """
-    R = Ricker( ic, fitness=fit, dispersal=disp, ndim=ndim, square=square )
+    R = Ricker( IC, fitness=fit, dispersal=disp, ndim=ndim, square=square )
 
-    pop = []
-
+    # containers for storage if necessary
+    if save_pop:
+        pop = [ R.population ]
     if save_abundance:
-        abundance = []
+        abundance = [ R.abundance() ]
     if betti_name:
-        betti = []
-    for i in range( tfinal ):
+        betti = [ R.compute_betti( betti_name + str(R.iter_number) ) ]
+    if compute_moran:
+        moran = [ R.compute_moran() ]
+
+    # Now iterate system
+    if spin_up > 0:
+        for i in range( spin_up ):
+            R.population_map()            
+    for i in range( spin_up, tfinal ):
         R.population_map()
-        pop.append( R.get_population_matrix() )
+        if save_pop:
+            pop.append( R.get_population_matrix() )
         if save_abundance:
             abundance.append( R.abundance() )
-        if betti_name:        
-            betti.append( R.compute_betti( betti_name ) )
+        if betti_name:
+            betti.append( R.compute_betti( betti_name + str(R.iter_number) ) )
+        if pers_name:
+            R.compute_persistence( pers_name+str(R.iter_number),
+                                   pers_scale )
+        if compute_moran:
+            moran.append( R.compute_moran() )
 
-    output = [ R, pop ]
+    output = { 'ricker': R }
+
+    if save_pop:
+        output['population'] = pop               
     if save_abundance:
-        output.append( abundance )
+        output['abundance'] = abundance
     if betti_name:
-        output.append( betti )
+        b = np.asarray( betti )
+        betti = b[:,:2]  # just keep 0 and 1 homology levels
+        output['betti'] = betti
+    if compute_moran:
+        output['moran'] = moran
     return output
     
 
@@ -218,17 +284,20 @@ if __name__ == "__main__":
 
     IC='./debug/test3x3.txt'
     disp = 0.0
-    fit = 5
-    ndim = 3
-    tf = 10
-    betti = 'debug/bettiTEST'
+    fit = 22
+    ndim = 20
+    tf = 20
+    pers_scale = 1000
+    betti_path ='debug/rickerBETTI_TEST' #betti = 'debug/bettiTEST'
     
-    ic = init_population( IC )
-    #ic = np.random.random( (ndim,ndim) )
+    #ic = init_population( IC )
+    ic = 10*np.random.random( (ndim,ndim) )
 
-    out = run( ic, tf, fit, disp, betti_name=betti, save_abundance=True )
+    out = run( ic, tf, fit, disp, spin_up=10, betti_name=betti_path,
+               save_abundance=True, save_pop=True, pers_scale=pers_scale,
+               pers_name='debug/rickerPERS_TEST', compute_moran=True )
 
-    persname = 'debug/persTEST'
+    #persname = 'debug/persTEST'
     #proc_pers.perseus_sub_super( R.population, persname, 1000 )
 
     

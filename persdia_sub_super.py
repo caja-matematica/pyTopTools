@@ -74,6 +74,10 @@ def persdia_sub_super( filename ):
     ax.plot( births[ sub_ints ], infsub_vec , 'rd', lw=1 )
     ax.plot( births[ super_ints ], infsuper_vec , 'rd' )
 
+    # axis lines, dashed
+    ax.hlines( 0, 0, max_axis+1, linestyle='dashed' )
+    ax.vlines( 0, 0, max_axis+1, linestyle='dashed' )
+
     # set axis limits
     ax.set_xlim( [ -0.1*maxd, (1.1)*(max_axis+1) ] )
     ax.set_ylim( [ -0.1*maxd, (1.1)*(max_axis+1) ] )

@@ -40,171 +40,40 @@ def run_chomp( fname ): #, savename ):
         print "subprocess returned with command: ", cmd
     return p
 
-def hom_time_gaps( files, dim=0 ):
+def array2cub( arr ):
     """
-    Compute the time intervals between successive changes in the
-    number of homology generators.
-
-    Imput
-    -----
-
-    files : path to a directory containing files recording the
-    generators per frames. Or, a single file containing this
-    information in a numpy array.
-    """
-    if os.path.isdir( files ):
-        fdir = files + '/'
-        dlist = os.listdir( fdir )
-        dlist.sort( key=R.natural_key )
-        data = []        
-        for f in dlist:
-            if f.endswith('npy') and not os.path.isdir( fdir+f ):
-                data.append( numpy.load( fdir + f ) )
-            elif f.endswith('betti') and not os.path.isdir( fdir+f ):
-                data.append( numpy.loadtxt( fdir + f ) )
-        data = numpy.asarray( data )
-    else:
-        try:
-            data = numpy.load( files )
-        except IOError:
-            raise
-    gens = data[:,dim,-1]
-    # find jumps in homology
-    dg = numpy.diff( gens )
-    # time at which a jump occurs
-    w = numpy.where( dg != 0 )[0]
-    # return time gaps
-    return numpy.diff( w )
-
-def bmp2binary( fname, val=0 ):
-    """
-    Binary images only.
+    arr : binarized (thresholded) array.
     
-    Load BMP using PIL. Assume 'fname' contains binary data. Extract
-    data array, shape correctly (will be funky bands otherwise). Use
-    array2chomp() to write PIL image data to disk.
+    Returns a list of indices suitable for writing a cubical complex.
+    A cubical complex file consists of a list of many lines of the
+    form ( n1, n2, ..., nd ) where d is the dimension of the complex
+    and the ni's are the coordinates of the individual cube.
 
-    fname -- location of BMP file
+    Example: (0, 0, 1, 0) (10, 13, 2, 3) ... two cubes of a four
+    dimensional cubical complex
 
-    outname -- full path to output file in CHomP-readable format (see
-    array2chomp). The extension '.cub' is the one usually used for
-    cubical files readable by CHomP.
-
-    val -- 'on' value of binary image.
+    Note: This only works for 2D complexes
     """
-    im = Image.open( fname )
-    s = im.size
-    data = numpy.array( im.getdata() )
-    data.resize( ( s[1], s[0] ) )
-    w = numpy.where( data == val )
-    arr = numpy.array( zip( w[0], w[1] ) )
-    return arr
+    arr = numpy.asarray( arr ) # sometimes matrices cause problems
+    # find appropriate cubical corners
+    w = numpy.where( arr==1 )
+    return numpy.array( zip( w[0], w[1] ), dtype=int )
 
-def bmp2array( fname, val=0 ):
-    """    
-    Load BMP using PIL. Assume 'fname' contains binary data. Extract
-    data array, shape correctly (will be funky bands otherwise). Use
-    array2chomp() to write PIL image data to disk.
-
-    fname -- location of BMP file
-
-    outname -- full path to output file in CHomP-readable format (see
-    array2chomp). The extension '.cub' is the one usually used for
-    cubical files readable by CHomP.
-
-    val -- 'on' value of binary image.
+def write_cubical_file( cub, fname ):
     """
-    im = Image.open( fname )
-    s = im.size
-    data = numpy.array( im.getdata() )
-    data.resize( ( s[1], s[0] ) )
-    return data
+    cub : coordinates of cubical corners.
 
-def bmp2chomp( fname, outname, val=0 ):
-    arr = bmp2array( fname, val )    
-    array2chomp( arr, outname )
-   
-
-def png2chomp( fname ):
+    fname : full path to output file. 
     """
-    Convert a numpy array to a text file with lines ( , , ) format for
-    chomp. Note: suffix for chomp-readable file must be 'cub' (for
-    cubicle complex).
-    """
-    # open PNG with python image library
-    im = Image.open( fname )
-    arr = numpy.asarray( im )
+    if not fname.endswith( '.cub' ):
+        fname += '.cub'
 
-    print arr.shape
-    # Find where pixels are black. 255 == white. 
-    w = numpy.where( arr != 255 )
-    del arr
-    # filter the rgb format
-    w2 = numpy.where( w[2] == 0 )[0]
-    newarr = numpy.vstack( ( w[0][w2], w[1][w2] ) ).T
-    chfile = fname.strip('png') + 'cub'
-    # array2chomp( newarr, chfile )
-            
-def array2chomp( arr, savename ):
-    """
-    Convert an array to chomp format, ( , , ). Write the resulting
-    column of numbers to disk.
-    """
-    arr = numpy.asarray( arr )
-    rows = map( lambda x: str(x)+'\n', map( tuple, iter( arr ) ) ) 
-    with open( savename, 'w' ) as fh:
-        fh.writelines( rows )
-
-def PIL2array(img):
-    return numpy.array(img.getdata(),
-                       numpy.uint8).reshape(img.size[1], img.size[0], 3)
-
-def array2PIL(arr, size):
-    mode = 'RGBA'
-    arr = arr.reshape(arr.shape[0]*arr.shape[1], arr.shape[2])
-    if len(arr[0]) == 3:
-        arr = numpy.c_[arr, 255*numpy.ones((len(arr),1), numpy.uint8)]
-    return Image.frombuffer(mode, size, arr.tostring(), 'raw', mode, 0, 1)
-
-def pix2array( fname, dim=2 ):
-    """
-    Convert a PIX file with entries ( , , ) to an array.
-    """
-    rows = []
-    with open( fname ) as fh:
-        if dim == 2:
-            for line in fh.readlines():
-                x = line.strip().split( ',' )
-                rows.append( [int( x[0][1:] ), int( x[1][:-1] )] )
-        elif dim == 3:
-            for line in fh.readlines():
-                x = line.strip().split( ',' )
-                rows.append( [int( x[0][1:] ), int( x[1] ), int( x[2][:-1] )] )
-    return numpy.array( rows, dtype=numpy.int )
-
-def stack_images( list_of_frames, height, val=0 ):
-    """
-    PIL tries to guess the file type from the extension.
-
-    list_of_frame : List of paths to images to stack 'vertically'.
-     The (first) bottom image has 1 appended to all coordinates, the next has
-     2 appened, etc.
-
-    val : (optional) Value to treat as the 'on' for chomp in binary
-    image.
-
-    Returns numpy array of stacked images.
-    """
-    # read in the frames
-    frames = []
-    for i, f in enumerate( list_of_frames ): 
-        arr = bmp2array( f, val=0 )
-        segment = numpy.empty( (arr.shape[0], 3), dtype=numpy.uint )
-        segment[:,:-1] = arr
-        segment[:,-1].fill( i )
-        frames.append( segment )
-
-    return numpy.vstack( frames )
+    with open( fname, 'wb' ) as fh:
+        for row in cub:
+            x, y = str(row[0]), str(row[1])
+            line = '(' + x + ',' + y + ')' + '\n'
+            fh.write( line )
+                   
 
 def extract_betti_string( chomp_out ):
     """

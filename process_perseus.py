@@ -71,8 +71,7 @@ def perseus_sub_super( mat, tmpPerseus, scale,
             # if P is one line, then shape is (2,). reshape to (1,2)
             if len( P.shape ) == 1:
                 P.resize( (1,2) )
-            print "P ", P
-            
+                       
             # for dim > 0, sometimes we get [] matrices
             if P.size == 0:
                 got_sub = False
@@ -86,9 +85,10 @@ def perseus_sub_super( mat, tmpPerseus, scale,
             # if Psup is one line, then shape is (2,). reshape to
             # (1,2)
             if len( Psup.shape ) == 1:
-                Psup.resize( (1,2) )
-            print "Psup ", Psup
-            
+                if len( Psup ) == 0:
+                    got_super = False
+                else:
+                    Psup.resize( (1,2) )
             if Psup.size == 0:
                 got_super = False
             else:
@@ -102,27 +102,18 @@ def perseus_sub_super( mat, tmpPerseus, scale,
         if got_super:
             # Shift births by max_val since we are considering
             # super-level sets.
-            inf_idx = np.where( Psup[:,1] == -1 ) #find( Psup(:,2) == -1 );
-            non_inf = np.where( Psup[:,1] != -1 )[0] #find( Psup(:,2) ~= -1 );
+            inf_idx = np.where( Psup[:,1] == -1 ) 
+            non_inf = np.where( Psup[:,1] != -1 )[0]
             Psup = -Psup + max_val + 1
-
-            print "new Psup", Psup
-
-            print "inf", inf_idx
-            print "noninf", non_inf
          
             # designate superlevel inf's differently and undo scaling
-            Psup[ inf_idx, 1 ] = -2  #Psup( inf_idx, 2 ) = -2;
-            #Psup[ non_inf, : ] = Psup[ non_inf, : ] / scale
-
+            Psup[ inf_idx, 1 ] = -2 
             Psup[ non_inf, 1 ] = Psup[ non_inf, 1 ] / scale
-
-            #Psup( non_inf, : ) = Psup( non_inf, : ) / scale;
-            Psup[:,0] = Psup[:,0] / scale #Psup( :, 1 ) = Psup( :, 1 ) / scale;
+            Psup[:,0] = Psup[:,0] / scale
             if got_sub:
-                non_inf = np.where( P[:,1] != -1 )[0]  #find( P(:,2) ~= -1 );
-                P[ non_inf, : ] = P[ non_inf, : ] / scale #P( non_inf, : ) = P( non_inf, : ) / scale;
-                P[:,0] = P[:,0] / scale #P( :, 1 ) = P( :, 1 ) / scale;
+                non_inf = np.where( P[:,1] != -1 )[0]
+                P[ non_inf, : ] = P[ non_inf, : ] / scale
+                P[:,0] = P[:,0] / scale 
                 full_pers = np.vstack( (P, Psup) )    
             else:
                 # already rescaled above, so no need here
@@ -131,9 +122,9 @@ def perseus_sub_super( mat, tmpPerseus, scale,
         # We just have sublevels 
         else:
             # don't need to deal with -1's
-            non_inf = np.where( P[:,1] != -1 )[0]  #find( P(:,2) ~= -1 );
-            P[ non_inf, 1 ] = P[ non_inf, 1 ] / scale #  P( non_inf, : ) = P( non_inf, : ) / scale;
-            P[:,0] = P[:,0] / scale #  P( :, 1 ) = P( :, 1 ) / scale;
+            non_inf = np.where( P[:,1] != -1 )[0] 
+            P[ non_inf, 1 ] = P[ non_inf, 1 ] / scale
+            P[:,0] = P[:,0] / scale 
             full_pers = P
      
         full_pers_fname = tmpPerseus + '_full_' + str( d ) + '.pdia'

@@ -1,4 +1,4 @@
-*.py[co]
+q*.py[co]
 *.py~
 
 # Packages
@@ -34,4 +34,9 @@ pip-log.txt
 *.txt
 *.svg
 *.pkl
+*.cub
+*.betti
+*.cbetti
+*.pdia*
+
 figures/

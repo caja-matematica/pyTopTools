@@ -54,7 +54,9 @@ def array2cub( arr ):
 
     Note: This only works for 2D complexes
     """
-    arr = numpy.asarray( arr ) # sometimes matrices cause problems
+    # sometimes np.matrix causes problems or unintuitive dimension
+    # issues
+    arr = numpy.asarray( arr )
     # find appropriate cubical corners
     w = numpy.where( arr==1 )
     return numpy.array( zip( w[0], w[1] ), dtype=int )
@@ -74,7 +76,6 @@ def write_cubical_file( cub, fname ):
             line = '(' + x + ',' + y + ')' + '\n'
             fh.write( line )
                    
-
 def extract_betti_string( chomp_out ):
     """
     chomp_out -- string output from chomp-rutgers

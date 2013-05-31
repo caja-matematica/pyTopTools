@@ -62,7 +62,7 @@ def perseus_sub_super( mat, tmpPerseus, scale,
     # Now combine the output files into one file for diagram plotting
     for d in range( max_dim + 1 ):
      
-        print 'DIMENSION ' + str( d )
+        #print 'DIMENSION ' + str( d )
      
         tmp1 = perseus_out + '_' + str( d ) + '.txt'
         tmp2 = perseus_out_sup + '_' + str( d ) + '.txt'

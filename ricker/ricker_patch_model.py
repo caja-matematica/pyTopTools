@@ -8,6 +8,7 @@ Opened: Match 26, 2013
 """
 import os
 import numpy as np
+from mpl_toolkits.mplot3d import Axes3D
 import matplotlib.pyplot as plt
 from pyTopTools import process_perseus as proc_pers
 from pyTopTools import persdia_sub_super as pd
@@ -44,7 +45,8 @@ class Ricker( object ):
         self._square = square
         self._verbose = verbose
         self._IC = IC
-        self._do_dispersal = False # change flag if creating dispersal matrix
+        # change flag if creating dispersal matrix. 
+        self._do_dispersal = False 
 
         if square:
             self.sysdim = ndim * ndim
@@ -93,17 +95,6 @@ class Ricker( object ):
         # return only the T/F mask
         return ma.mask
 
-    def binarize( self, thresh=-1 ):
-        """
-        Threshold to get a binary array, with 1's where
-        self.population >= thresh. See threshold() for usage of
-        thresh.
-        """
-        mask = self.threshold( thresh )
-        z = np.ones_like( self.population, dtype=int )
-        z[mask] = 0
-        return z
-
     def abundance( self ):
         try:
             return self.population.sum()
@@ -149,6 +140,17 @@ class Ricker( object ):
         if self.verbose:
             print "Done!"
 
+    def binarize( self, thresh=-1 ):
+        """
+        Threshold to get a binary array, with 1's where
+        self.population >= thresh. See threshold() for usage of
+        thresh.
+        """
+        mask = self.threshold( thresh )
+        z = np.ones_like( self.population, dtype=int )
+        z[mask] = 0
+        return z
+
     def compute_betti( self, output ):
         """
         Calls chomp_tools.run_chomp() on output.
@@ -189,7 +191,7 @@ class Ricker( object ):
         return S.get_moran_I()
         
 
-    def draw_persistence_diagram( self, fname ):
+    def draw_persistence_diagram( self, fname, **args ):
         """
         """
         if not os.path.isfile( fname ):
@@ -197,19 +199,31 @@ class Ricker( object ):
                 "Please create it using self.compute_persistence()."
             return
         else:
-            fig = pd.persdia_sub_super( fname )
+            fig = pd.persdia_sub_super( fname, **args )
             return fig
 
-    def draw_matrix( self ):
+    def draw_matrix( self, thresh=None, val=-1 ):
         """
         Use imshow() to to display the population matrix.
         """
+        if thresh:
+            m = self.threshold( val )
+        else:
+            m = self.population
         fig = plt.figure()
         ax = fig.gca()
-        ax.imshow( self.population )
+        ax.imshow( m, interpolation='nearest' )
         return fig
+
+    def draw_matrix_3d( self ):
+        """
+        """
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='3d')
+
+
     
-    # ========= END RICKER ===========
+    # ========= END RICKER CLASS ===========
 
 def init_population( IC ):
     """
@@ -240,6 +254,7 @@ def run( IC, tfinal, fit, disp, spin_up=0, ndim=1,
     # containers for storage if necessary
     if save_pop:
         pop = [ R.population ]
+        binary = [ R.binarize() ]
     if save_abundance:
         abundance = [ R.abundance() ]
     if betti_name:
@@ -255,6 +270,7 @@ def run( IC, tfinal, fit, disp, spin_up=0, ndim=1,
         R.population_map()
         if save_pop:
             pop.append( R.get_population_matrix() )
+            binary.append( R.binarize() )
         if save_abundance:
             abundance.append( R.abundance() )
         if betti_name:
@@ -268,11 +284,15 @@ def run( IC, tfinal, fit, disp, spin_up=0, ndim=1,
     output = { 'ricker': R }
 
     if save_pop:
-        output['population'] = pop               
+        output['population'] = pop
+        output['binary'] = binary
     if save_abundance:
         output['abundance'] = abundance
     if betti_name:
         b = np.asarray( betti )
+
+        print "b", b
+        
         betti = b[:,:2]  # just keep 0 and 1 homology levels
         output['betti'] = betti
     if compute_moran:

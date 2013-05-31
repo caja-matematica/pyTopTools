@@ -2,7 +2,9 @@ import numpy as np
 import subprocess as sp
 import matplotlib.pyplot as plt
 import npy2perseus as n2p
-import perseus_wrap as pers
+from pyTopTools import perseus_wrap as pers
+from pyTopTools import bottleneck_distance as BD
+import tempfile
 
 """
 Module for handling time series and ndarrays for persistence analysis.
@@ -32,7 +34,7 @@ class Timeseries( object ):
             except IOError:
                 self.data = np.fromfile( self.fname, sep='\n' )
 
-                # self.dtype = data_type
+        self.dtype = data_type
 
 
     def __repr__( self ):
@@ -122,12 +124,17 @@ class Timeseries( object ):
 
 class Window( Timeseries ):
 
-    def __init__( self, data, tmin, tmax, data_type='vr' ):
+    def __init__( self, data, tmin=0, tmax=-1, data_type='vr' ):
 
         Timeseries.__init__( self, data, data_type )
         self.tmin = tmin
         self.tmax = tmax
+        if not tmin:
+            tmin = 0
+        if not tmax:
+            tmax = len( data )
         self.data = self.data[ tmin:tmax ]
+        self.persdia = None
 
     def compute_persistence( self, fname, output=None, dtype='brips', debug=False ):
         """
@@ -135,18 +142,65 @@ class Window( Timeseries ):
         the VR complex in fname.
         """
         # prefix for the persistence diagram files
-        self.persdia = output
         if not output:
             if fname.endswith( '.txt' ):
                 output = fname[:-4]
         pers.perseus( fname, output, dtype, debug=debug )
-       
-    def draw_diagram( self, fname=None, dim=0, fig=None ):
+
+        # just load 0-dim diagram for now since we're just working with time series
+        self.persdia = np.loadtxt( output + '_0.txt' )
+
+    def compute_bottleneck_distance( self, other, this_dia=None,
+                                     return_match=False, engine='py' ):
+        """
+        Compute the bottleneck distance between this the persistence
+        diagram for this data and a diagram for 'other'.
+        """
+        # the persistence diagram for this window has not already been computed.
+        if self.persdia is None:
+            try:
+                self.persdia = np.loadtxt( this_dia )
+            except IOError:
+                return
+            self.compute_persistence( self.persdia )
+        if engine =='py':
+            dist, matching = BD.bdist( self.persdia, other )
+            if not return_match:
+                return dist
+            else:
+                return dist, matching
+        # insert call to Miro's C++ bottleneck code
+        elif engine=='c':
+            try:
+                p = sp.check_output( ["bottleneck", this_dia, other] )
+            except:
+                print "subprocess returned an error!"
+            return int( p )
+
+    def compute_wasserstein_distance( self, this_dia, other ):
+        """
+        Compute the Wasserstein distance between self.persdia and other.
+
+        this_dia : path to this window's persistence diagram data
+
+        other : path to persdia file
+        """
+        try:
+            p = sp.check_output( ["wasserstein", this_dia, other] )
+        except:
+            print "subprocess returned an error!"
+        return int( p )
+        
+    def draw_diagram( self, fname=None, dim=0, fig=None, scale=False, **args ):
         """
         """
         if not fname:
             fname = self.persdia
             fname = fname + '_' + str( dim ) + '.txt'
-        pers.plot_diagram( fname, fig=fig )
+        if not scale:
+            fig = pers.plot_diagram( fname, fig=fig, **args )
+        else:
+            fig = pers.plot_diagram_scaled( fname, fig=fig, **args )
+        return fig
     
     

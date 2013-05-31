@@ -1,3 +1,9 @@
+"""
+This module explores bifurcation detection around a saddle node
+bifurcation using a Morse-theoretic approach (i.e. sublevel sets of a
+1D function).
+"""
+
 import persistence_tools as P
 import perseus_wrap as pw
 

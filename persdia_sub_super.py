@@ -2,13 +2,17 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-def persdia_sub_super( filename ):
+def persdia_sub_super( filename, **kwargs ):
     """
     filename -- path to .npy or .txt file containing persistence intervals
 
     birth and death info in column form
     
     """
+    args = { 'ms' : 2 }
+    args.update( kwargs )
+
+    
     # set a flag in case the only death is infinite; default is false
     maxd_is_inf = False 
     normal_gens = False
@@ -48,7 +52,7 @@ def persdia_sub_super( filename ):
     ax = fig.gca()
     
     # we always plot these
-    ax.plot( births[ normal_ints ], deaths[ normal_ints ], 'bo', ms=2 );
+    ax.plot( births[ normal_ints ], deaths[ normal_ints ], 'bo', **args  );
 
     # create diagonal
     diag = [0, maxd+2]
@@ -71,8 +75,8 @@ def persdia_sub_super( filename ):
     ax.plot( diag, npts * [0], 'k--' )
 
     # plot infinite stuff
-    ax.plot( births[ sub_ints ], infsub_vec , 'rd', lw=1 )
-    ax.plot( births[ super_ints ], infsuper_vec , 'rd' )
+    ax.plot( births[ sub_ints ], infsub_vec , 'rd', lw=1, **args )
+    ax.plot( births[ super_ints ], infsuper_vec , 'rd', **args )
 
     # axis lines, dashed
     ax.hlines( 0, 0, max_axis+1, linestyle='dashed' )

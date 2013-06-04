@@ -1,22 +1,20 @@
-from pyTopTools import chomp_betti as cb
+from pyTopTools import chomp_image as C
 import matplotlib.pyplot as plt
 import pp
 
 
 start = time.time()
 
-stack_height = [10, 20]#
+stack_height = [50,100] #[10, 20]
 
-path = '/data/CT_Firn_Sample/output23-10-3/'
-chomp_path = '/data/CT_Firn_Sample/chomp_files/'
-prefix = 'K09b-23-10-'
+# path = '/data/CT_Firn_Sample/output23-10-3/'
+# chomp_path = '/data/CT_Firn_Sample/chomp_files/'
+# prefix = 'K09b-23-10-'
 
 
 chomp_path = '/sciclone/data10/jberwald/CT_Firn_Samples/chomp_files/'
 path = '/sciclone/data10/jberwald/CT_Firn_Samples/output23-10-3/'
 prefix = 'K09b-23-10-'
-
-## Write Chomp-readable files for 3D blocks
 
 #parallelize this stuff
 ncpus = len( stack_height )
@@ -30,18 +28,6 @@ top = 3220
 if 0:
     for height in stack_height:
 
-        # pool.append( job_server.submit( chomp_stack,
-        #                                 ( bottom,
-        #                                   top,
-        #                                   height,
-        #                                   path,
-        #                                   chomp_path,
-        #                                   prefix ),
-        #                                 depfuncs = ( stack_images, array2chomp,
-        #                                              run_chomp )
-        #                                 ) )
-
-
         print "Stack height:", height
         for base in [3310, 3320]:#range( 3200,  3400, height ):
             frames = []
@@ -54,15 +40,11 @@ if 0:
             stack = cb.stack_images( frames, height )
             cubfile = chomp_path + prefix[:-1] + \
                 '_b' + str( base ) + \
-                '_h' + str( height ) 
-
-            # Convert bmp files to array, stack them, write them to
-            # chomp-readable format.
-            cb.array2chomp( stack, cubfile + '.cub' )
+                '_h' + str( height )
 
             # Now compute homology for each block
-            cb.run_chomp( cubfile + '.cub', cubfile + '.hom'  )
-            cb.extract_betti( cubfile + '.hom' )
+            #cb.run_chomp( cubfile + '.cub', cubfile + '.hom'  )
+            #cb.extract_betti( cubfile + '.hom' )
         print ""
 
     print "Time:", time.time() - start

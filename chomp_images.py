@@ -1,3 +1,8 @@
+"""
+chomp_images.py
+
+Module for working with 2D images and 3D blocks of images.
+"""
 import subprocess, os
 import matplotlib.pyplot as plt
 import matplotlib.mlab as mlab
@@ -128,7 +133,7 @@ def write_cubical_file( cub, fname ):
 def cub2file( arr, savename ):
     """
     Convert an array to chomp format, ( , , ). Write the resulting
-    column of numbers to disk.
+    column of numbers to disk. Works with ndarrays.
     """
     rows = map( lambda x: str(x)+'\n', map( tuple, iter( arr ) ) ) 
     with open( savename, 'w' ) as fh:

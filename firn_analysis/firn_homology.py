@@ -1,55 +1,130 @@
 from pyTopTools import chomp_image as C
+from pyTopTools import pyImage as P
+import numpy as np
 import matplotlib.pyplot as plt
-import pp
+import cPickle as pkl
+import pp, time
 
+
+#chomp_path = '/sciclone/data10/jberwald/CT_Firn_Samples/chomp_files2/'
+#chomp_path = './_cubfile.cub'
+
+def firn_stack_betti_numbers( ims, cubfile='/var/tmp/_cubfile.cub' ):
+    """
+    Create a single stack of images and compute the homology.
+    """   
+    block = P.build_block( ims )
+    
+    # cubfile = chomp_path + prefix[:-1] + \
+    #     '_b' + str( base ) + \
+    #     '_h' + str( height ) + '.cub'
+    
+    CI = P.ChompImage( ims ) 
+    CI.get_cubical_corners()
+    CI.cub2file( cubfile )            
+    CI.run_chomp( cubfile )
+    CI.extract_betti()
+    return CI
+
+def build_firn_stacks( bottom, top, height, step=None, cap=False ):
+    """
+    Build a sequence of image stacks:
+
+    ( start + height, start + step + height, start + 2*step+height, ...
+    top - step + height )
+
+    Returns a dictionary of betti numbers, keyed by stacks, key==(bottom, top).
+
+    Optional args:
+    -------------
+
+    step : steps to take in range. default=None will set step==height,
+    so there are no overlapping blocks.
+    """
+    if step is None:
+        step = height
+    # stack images from bottom to top and record betti numbers
+    betti = {}
+    for base in range( bottom,  top, step ):
+        # create a sequence of images to stack
+        ims = []
+        # grab each image from base --> base+height
+        for x in range( height ):
+            image_num = base + x
+            im = P.PyImage( path + prefix + str( image_num ) + '.bmp' )
+            im.bmp2array()
+            ims.append( im.data )
+
+        if cap:
+            block = P.cap_block( ims )
+        else:
+            block = P.build_block( ims )
+        # returns a ChompImage object
+        b = firn_stack_betti_numbers( block )
+        key = ( base, base+x )
+        betti[ key ] = b.betti
+        
+    return betti
+
+
+###################################
+#
+# Run experiments below
+#
+###################################
 
 start = time.time()
 
-stack_height = [50,100] #[10, 20]
+#path = '/data/CT_Firn_Sample/output23-10-3/'
+#chomp_path = '/data/CT_Firn_Sample/debug/'
+#prefix = 'K09b-23-10-'
 
-# path = '/data/CT_Firn_Sample/output23-10-3/'
-# chomp_path = '/data/CT_Firn_Sample/chomp_files/'
-# prefix = 'K09b-23-10-'
-
-
-chomp_path = '/sciclone/data10/jberwald/CT_Firn_Samples/chomp_files/'
 path = '/sciclone/data10/jberwald/CT_Firn_Samples/output23-10-3/'
 prefix = 'K09b-23-10-'
+    
+if 1:
 
-#parallelize this stuff
-ncpus = len( stack_height )
-job_server = pp.Server( ncpus, ppservers=() )   
-pool = []
+    betti_path = '/sciclone/data10/jberwald/CT_Firn_Samples/firn_blocks_June2013/'
+    
+    low = 3200
+    high = 3800
+    height = [ 40, 60 ]
 
-bottom = 3200
-top = 3220
+    for h in height:
+        for level in range( low, high, h ):
+            print "Building stack of images... "
+            print "  level ", str( level )
+            print "  height ", str( h )
+            B = build_firn_stacks( low, high, h )
+        savename = betti_path + prefix + 'base' + str(low) +\
+            '_top'+str(high) + '_h' + str(h) + '.pkl'
+        with open( savename, 'w' ) as fh:
+            pkl.dump( B, fh )
 
+    print "Total time: ", time.time() - start
 
 if 0:
-    for height in stack_height:
 
-        print "Stack height:", height
-        for base in [3310, 3320]:#range( 3200,  3400, height ):
-            frames = []
-            # list of frames to stack
-            for x in range( height ):
-                num = base + x
-                frames.append( path + prefix + str( num ) + '.bmp' )
+    betti_path = '/sciclone/data10/jberwald/CT_Firn_Samples/firn_caps_June2013/'
+    
+    low = 3200
+    high = 3800
+    height = [ 40, 60 ]
 
-            print "    Stacking from base:", base
-            stack = cb.stack_images( frames, height )
-            cubfile = chomp_path + prefix[:-1] + \
-                '_b' + str( base ) + \
-                '_h' + str( height )
+    for h in height:
+        for level in range( low, high, h ):
+            print "Building stack of images... "
+            print "  level ", str( level )
+            print "  height ", str( h )
+            B = build_firn_stacks( low, high, h, cap=True )
+        savename = betti_path + prefix + 'base' + str(low) +\
+            '_top'+str(high) + '_h' + str(h) + '.pkl'
+        with open( savename, 'w' ) as fh:
+            pkl.dump( B, fh )
 
-            # Now compute homology for each block
-            #cb.run_chomp( cubfile + '.cub', cubfile + '.hom'  )
-            #cb.extract_betti( cubfile + '.hom' )
-        print ""
+    print "Total time: ", time.time() - start
 
-    print "Time:", time.time() - start
-
-if 1:
+if 0:
 
     #for height in stack_height:
     height = 10

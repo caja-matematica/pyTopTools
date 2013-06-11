@@ -1,8 +1,3 @@
-"""
-chomp_images.py
-
-Module for working with 2D images and 3D blocks of images.
-"""
 import subprocess, os
 import matplotlib.pyplot as plt
 import matplotlib.mlab as mlab
@@ -27,6 +22,9 @@ except ImportError:
 
 slash = '/'
 
+
+        
+
 def natural_key(string_):
     """
     Use with frames.sort(key=natural_key)
@@ -45,35 +43,6 @@ def run_chomp( fname ): #, savename ):
         print "subprocess returned with command: ", cmd
     return p
 
-def bmp2array( bmpfile ):
-    """
-    """
-    im = Image.open( bmpfile )
-    nx,ny = im.size # tuple (x,y)
-    data = numpy.array( im.getdata() )
-    data.resize( (ny,nx) ) # this must be reversed
-    return data
-
-def array2cub( arr ):
-    """
-    arr : binarized (thresholded) array.
-    
-    Returns a list of indices suitable for writing a cubical complex.
-    A cubical complex file consists of a list of many lines of the
-    form ( n1, n2, ..., nd ) where d is the dimension of the complex
-    and the ni's are the coordinates of the individual cube.
-
-    Example: (0, 0, 1, 0) (10, 13, 2, 3) ... two cubes of a four
-    dimensional cubical complex
-
-    Note: This only works for 2D complexes
-    """
-    # sometimes np.matrix causes problems or unintuitive dimension
-    # issues
-    arr = numpy.asarray( arr )
-    # find appropriate cubical corners
-    w = numpy.where( arr==1 )
-    return numpy.array( zip( w[0], w[1] ), dtype=int )
 
 def cub2array( cubfile ):
     """
@@ -114,31 +83,6 @@ def _convert_coords( c ):
     return numpy.array( nums )
     
     
-
-def write_cubical_file( cub, fname ):
-    """
-    cub : coordinates of cubical corners.
-
-    fname : full path to output file. 
-    """
-    if not fname.endswith( '.cub' ):
-        fname += '.cub'
-
-    with open( fname, 'wb' ) as fh:
-        for row in cub:
-            x, y = str(row[0]), str(row[1])
-            line = '(' + x + ',' + y + ')' + '\n'
-            fh.write( line )
-
-def cub2file( arr, savename ):
-    """
-    Convert an array to chomp format, ( , , ). Write the resulting
-    column of numbers to disk. Works with ndarrays.
-    """
-    rows = map( lambda x: str(x)+'\n', map( tuple, iter( arr ) ) ) 
-    with open( savename, 'w' ) as fh:
-        fh.writelines( rows )
-                   
 def extract_betti_string( chomp_out ):
     """
     chomp_out -- string output from chomp-rutgers
@@ -364,6 +308,11 @@ def mse_converter( fname ):
                 lines.append( ( float(line[0]), float(line[1]) ) )
     return numpy.array( lines )
 
+def test( fname, chomp_fname ):
+
+    bmp = bmp2array( fname )
+    
+    
         
 if __name__ == "__main__":
     
@@ -375,10 +324,11 @@ if __name__ == "__main__":
     stack_height = [10, 20, 30]
 
     path = '/data/CT_Firn_Sample/output23-10-3/'
-    chomp_path = '/data/CT_Firn_Sample/chomp_files/'
+    chomp_path = '/data/CT_Firn_Sample/debug/'
 #    prefix = 'K09b-23-10-'
     image = 'K09b-23-10-3616.bmp'
 
+    test( path + image, chomp_path + image )
     
     # chomp_path = '/sciclone/data10/jberwald/CT_Firn_Samples/chomp_files/'
     # path = '/sciclone/data10/jberwald/CT_Firn_Samples/output23-10-3/'

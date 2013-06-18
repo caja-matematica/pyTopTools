@@ -13,7 +13,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 import re
 import os
-import rbc_current as rc
+import rbc_utils as rc # formerly rbc_current
 
 def plot_diagram (persFile, lb=0, ub=2, out_type='bin',rmv='Y', dpi=80, fontsize=20):
     """
@@ -97,7 +97,7 @@ def plot_diagram_std (persFile, fontsize=16, scale=1,
     
     if not fig:
         fig = plt.figure( ) #dpi=160 )
-        fig.patch.set_alpha( 0.0 )
+    fig.patch.set_alpha( 0.0 )
     ax = fig.gca()
 
     # plot the normal generators
@@ -116,7 +116,8 @@ def plot_diagram_std (persFile, fontsize=16, scale=1,
     yticks = [ int( tk ) for tk in ax.get_yticks() ]
     ax.set_xticklabels( xticks, fontsize=fontsize )
     ax.set_yticklabels( yticks, fontsize=fontsize )
-    ax.set_xlim( left=0 )
+    ax.set_xlim( left=0, right=diag[-1] )
+    ax.set_ylim( bottom=0, top=diag[-1] )
     if show_fig:
         fig.show()
 
@@ -124,7 +125,8 @@ def plot_diagram_std (persFile, fontsize=16, scale=1,
     print "Total number of persistence intervals", len( births ) 
     return fig
 
-def plot_diagram_regions( persFile, lines=None, fontsize=16, zoom=False, scale=None, gauss=False ):
+def plot_diagram_regions( persFile, lines=None, fontsize=16, zoom=False,
+                          scale=None, gauss=False, marker_size=20 ):
     """
     persFile -- path to perseus persistence diagram text file
 
@@ -162,9 +164,10 @@ def plot_diagram_regions( persFile, lines=None, fontsize=16, zoom=False, scale=N
     # now make the figure
     fig = plt.figure()# dpi=160, frameon=False )
     ax = fig.gca()
-    ax.scatter( nx, ny,c='b',marker='o',lw=.1, s=50)
+    ax.scatter( nx, ny,c='b',marker='o',lw=.1, s=marker_size)
     diag = [0, maxLevel]
     ax.plot( diag, diag, 'g-')
+
     if not gauss:
         xticks = [0,500,1800] +lines
         yticks = [0,500,1800] +lines
@@ -177,6 +180,13 @@ def plot_diagram_regions( persFile, lines=None, fontsize=16, zoom=False, scale=N
         yticks = [0,5,10,15, 20] + lines
         # xticks = [0,500,1500,2000,2500] + lines
         # yticks = [0,500,1500,2000,2500] + lines
+
+        # for line in lines:
+        #     rect = matplotlib.patches.Rectangle((0,line),line,
+        #                                         ax.get_ylim()[1] - line,
+        #                                         color='#00C5CD', alpha=0.6)
+        #     ax.add_patch( rect )
+        
     xticks.sort()
     yticks.sort()
     xticks_str = [ str( t ) for t in xticks ]
@@ -200,7 +210,7 @@ def plot_diagram_regions( persFile, lines=None, fontsize=16, zoom=False, scale=N
     #ax.set_title( 'Persistence Diagram', fontsize=fontsize+4 )
     #ax.set_xlabel( 'birth', fontsize=fontsize )
     #ax.set_ylabel( 'death', fontsize=fontsize )
-    fig.show()
+    #fig.show()
     return fig
 
     

@@ -1,0 +1,18 @@
+Contents of files:
+------------------
+
+* newgen_avgshift_lb40.pkl : 
+
+all (b,d) pairs for *robust* generators with lifespans above 40. The
+lower bound (lb) of 40 is irrelevant since we would find the
+longest-lived generators anyway -- it allows an initial filter to
+lessen file size. Cells currently analyzed:
+
+['new_50125', 'new_40125', 'new_130125', 'new_140125', 'new_110125']
+
+* oldgen_avgshift_lb40.pkl : 
+
+same as above. Cells currently analyzed:
+
+['old_50125', 'old_90125', 'old_100125', 'old_120125']
+

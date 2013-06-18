@@ -1,0 +1,3 @@
+Birth times in this folder were computed using *unnormalized* cell images. Each persistence diagram was shifted by the mean pixel value ofthe corresponding frame. The k'th generator 
+corresponds to k'th longest lifespan after removing the 'infinite' generator. This differs from the non-V2 figures, which were computed using an ad hoc approach for determining the 
+k'th generator. This was fixed for *V2's. 

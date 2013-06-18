@@ -3,7 +3,7 @@ import numpy
 import os, re
 import matplotlib.pyplot as plt
 import cPickle as pkl
-from pyTopTools.rbc_analysis import rbc_histogram as rh
+import rbc_histogram as rh
 
 
 def get_gens ( file, rmv='',data = ''):

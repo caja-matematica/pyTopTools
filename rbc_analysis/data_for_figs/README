@@ -22,6 +22,19 @@ Perseus, persistence homology software.
 	 /usr/bin to the location of the perseus executable.
 
 
+To create figures for the RBC paper:
+====================================
+
+From python or ipython interpreter, either 
+
+(1) run rbc_paper_figs
+
+or 
+
+(2) import rbc_paper_figs as R
+    R.make_all_figs()
+
+
 Contents of data_for_figs directory:
 ====================================
 

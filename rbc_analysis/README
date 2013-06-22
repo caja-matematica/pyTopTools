@@ -1,0 +1,106 @@
+Note on software requirements:
+==============================
+
+All figures are plotted with Python and Perseus:
+
+Python is vanilla Python2.7. The RBC software has the following
+external (numeric) dependencies:
+
+* numpy (version >1.0 should do it)
+* matplotlib (version >0.99 should suffice)
+
+Perseus, persistence homology software. 
+
+	 Download: http://www.math.rutgers.edu/~vidit/perseus/index.html
+	 
+	 It's vanilla C++, so compiling should not be an issue.
+
+	 The executable 'perseus' must be in your PATH so that it can
+	 be called by run_persues.perseus() as a subprocess. The
+	 easiest way to guarantee this is to either (1) copy the
+	 executable to /usr/bin, or (2) make a symbolic link from
+	 /usr/bin to the location of the perseus executable.
+
+
+Contents of data_for_figs directory:
+====================================
+
+CELL FRAMES (Figs 1 & 4):
+------------
+
+Single cell frames for Figures 1 and 4:
+
+* new11_frame2000.npy
+* old12_frame2000.npy 
+
+Note: Persistence diagram data for single frames in Figures 1 and 4 is
+computed from the above. Saved in,
+
+* new11_frame2000_1.txt 
+* old12_frame2000_1.txt
+
+(as well as intermediate "*_pers.txt" files).
+
+
+GAUSSIANS (Figs 2 & 3):
+----------
+
+These are all computed online in make_all_figs. The data are stored
+"gauss*" files.
+
+
+HISTOGRAMS of all cells (Fig 5):
+------------------------
+
+Data for all-cell hisotgram in Figure 3:
+
+* new_hist_ts.pkl 
+* old_hist_ts.pkl 
+
+Data for all-cell interpolation line and single cell histogram zoomed, overlay:
+
+* new_110125-concatenated-ASCII_2000_1.txt
+* old_120125-concatenated-ASCII_2000_1.txt
+
+
+BIRTH TIMES (Fig 6):
+------------
+
+Data for Figure 6, birth time histograms:
+
+* newgen_avgshift_lb40.pkl : 
+
+  All (b,d) pairs for *robust* generators with lifespans above 40. The
+  lower bound (lb) of 40 is irrelevant since we would find the
+  longest-lived generators anyway -- it allows an initial filter to
+  lessen file size. Cells currently analyzed:
+
+['new_50125', 'new_40125', 'new_130125', 'new_140125', 'new_110125']
+
+* oldgen_avgshift_lb40.pkl : 
+
+  Same as above. Cells currently analyzed:
+
+['old_50125', 'old_90125', 'old_100125', 'old_120125']
+
+* newgen_avgshift_lb40_gen<g>_V2.pkl 
+* oldgen_avgshift_lb40_gen<g>_V2.pkl :
+
+  List if lifespans for generator g \n {1,2,3,4,5}. This is a concatenated list
+  of all cells in the {new,old}gen_avgshift_lb40.pkl files above. 
+
+  To obtain time series of robust birth times for cell C, say the g'th generator:
+
+     Example:
+
+       import bith_times as bt
+       import cPickle as pkl
+       import numpy as np
+
+	with open( prefix+ new_single ) as fh:
+                a = pkl.load(fh)
+                sing_new = a[ c_new ]
+
+	bt_new = bt.characteristic_birth_time( sing_new, gen_num=g )
+        bt_new = np.array( bt_new )
+

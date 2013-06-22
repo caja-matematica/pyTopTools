@@ -1,0 +1,13 @@
+Notes of octree:
+
+
+POINTS: There are 25429 individual points. 
+
+CELLS: The cells are defined as "type" 11, which is a voxel for which each corner is defined by a points from Points.
+Eg., 8 0 1 2 3 4 5 6 7 => 8 points, which are points 0, points 1, etc. The point numbers then reference the points
+indexed by line in the POINTS field. 
+
+CELL_TYPES: All type 11 => voxel, as described above
+
+CELL_DATA: Defined to be SCALARS with name "cell_scalars", and to be floats. The number matches the number of CELLS. 
+The LOOKUP_TABLE then gives each cell defined in CELLS a scalar value. 

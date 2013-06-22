@@ -631,7 +631,7 @@ def make_all_figs():
     #======================
     # FIGURE 1
     #======================
-    if 0:
+    if 1:
         print "Making Figure 1..."
         # single frame of one cell
         frame_path = data_prefix + 'new11_frame2000.npy'

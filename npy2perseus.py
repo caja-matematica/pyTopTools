@@ -2,12 +2,13 @@
 Module to convert numpy array to various Persues formats.
 """
 
-import numpy
+import numpy as np
 import matplotlib.pylab as plt
 import re
 import os
 import pickle as pkl
 from scipy.spatial import distance
+from itertools import izip
 
 space = ' '  # for strings
 
@@ -29,7 +30,7 @@ def write_file ( fname, output ):
         #Note: Output is file name
     """
     #Load npy file
-    data = numpy.load(fname)
+    data = np.load(fname)
     size = data.shape#(203,198)
     dim = len ( size )
     #Open file
@@ -62,9 +63,9 @@ def write_timeseries( arr, output, scale=1, block=None, ptype='cub', **kwargs ):
     block : tuple (start,end) of indices to slice and write to disk (instead of complete arr).
     """
     if block:
-        data = numpy.copy( arr[ block[0]:block[1] ] )
+        data = np.copy( arr[ block[0]:block[1] ] )
     else:
-        data = numpy.copy( arr )
+        data = np.copy( arr )
         
     min_val = data.min()
     if min_val < 1:
@@ -74,7 +75,7 @@ def write_timeseries( arr, output, scale=1, block=None, ptype='cub', **kwargs ):
     # floats, and then take the ceil (or floor) by converting to ints.
     if scale != 1:
         data *= scale
-        data = numpy.asarray(data, dtype=int )
+        data = np.asarray(data, dtype=int )
 
     if ptype == 'cub':
         with open( output, 'w' ) as fh:
@@ -100,7 +101,7 @@ def write_cubtop( arr, output, ndim=2, scale=1, dtype=None ):
     if scale != 1:
         arr *= scale
     if dtype:
-        arr = numpy.asarray( arr, dtype=dtype )    
+        arr = np.asarray( arr, dtype=dtype )    
         
     with open( output, 'w' ) as fh:
         fh.write( str( arr.ndim )+'\n' )
@@ -138,6 +139,25 @@ def write_scubtop( arr, output, ndim=2 ):
                     fh.write (pos + str(int( arr[i,j] )) + "\n")
     return output
 
+def write_scubtop_ND( arr, output ):
+    """
+    arr : numpy ndarray
+
+    output : name (full path) of output perseus-readable file
+    """
+    space = ' '
+    with open( output, 'w' ) as fh:
+        fh.write( str( arr.ndim ) + '\n' )
+        w = np.where( arr != 0 )
+
+        # iterator over all non-zero coordinate in arr
+        all_nz = izip( *w )
+        for nz in all_nz:
+            pos = map( str, nz )
+            pos.append( str( arr[nz] ) )
+            pos.append( '\n' )
+            fh.write( space.join( pos ) )      
+    
 
 def write_vr( data, **kwargs ):
     """
@@ -202,9 +222,9 @@ def write_distance_mat( data, output=None, g=0.1, stepsize=0.2,
     if not hasattr( data, '__index__' ):
         # .npy or .txt
         try:
-            data = numpy.load( data )
+            data = np.load( data )
         except IOError:
-            data = numpy.loadtxt( data )
+            data = np.loadtxt( data )
     dist = distance.pdist( data, metric=metric )
     if output:
         dist = distance.squareform( dist )

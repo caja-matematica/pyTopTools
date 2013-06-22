@@ -120,7 +120,7 @@ def find_unique( arr ):
 
 
 def plot_diagram_scaled( persFile, fontsize=12, scale=None, color='b',
-                  show_fig=True, fig=None, title=None, marker_scale=1 ):
+                         show_fig=True, fig=None, title=None, marker_scale=1 ):
     """
     This is the smae as plot_diagram(), except that each point on the
     diagram is scaled in relation to its number of occurences in the
@@ -259,7 +259,7 @@ def plot_diagram( persFile, fontsize=12, scale=None, color='b',
         ax.plot( births[normal_idx], deaths[normal_idx], color+'o' )
 
     # create diagonal
-    diag = [0, maxd+2]
+    diag = [0, maxd+1]
     ax.plot(diag, diag, 'g-')
 
     # infinite gens

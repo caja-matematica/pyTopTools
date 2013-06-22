@@ -70,35 +70,52 @@ def array2cub( arr ):
     w = numpy.where( arr==1 )
     return numpy.array( zip( w[0], w[1] ), dtype=int )
 
-def cub2array( cubfile ):
-    """
-    Convert cubical file in format:
+# def cub2array( cubfile ):
+#     """
+#     Convert cubical file in format:
 
-    (a,b,c,...)
+#     (a,b,c,...)
 
-    to numpy array.
+#     to numpy array.
 
-    cubfile : path to cubical complex file.
+#     cubfile : path to cubical complex file.
     
-    Returns binary numpy ndarray. (For visualization, must be dim <= 3 )
-    """
-    with open( cubfile ) as fh:
-        corners = fh.readlines()
+#     Returns binary numpy ndarray. (For visualization, must be dim <= 3 )
+#     """
+#     with open( cubfile ) as fh:
+#         corners = fh.readlines()
         
-    # debug
-    # corners = corners[:50]
-    # print corners
+#     # debug
+#     # corners = corners[:50]
+#     # print corners
  
-    dim = len( _convert_coords( corners[0] ) )
-    npts = len( corners )
-    arr = numpy.zeros( ( npts, dim ), dtype=numpy.int8 )
+#     dim = len( _convert_coords( corners[0] ) )
+#     npts = len( corners )
+#     arr = numpy.zeros( ( npts, dim ), dtype=numpy.int8 )
     
-    for x in corners:
-        c = _convert_coords( x )
-        arr[ c ] = 1
+#     for x in corners:
+#         c = _convert_coords( x )
+#         arr[ c ] = 1
 
-    return arr
+#     return arr
     
+def cub2array( fname, dim=2 ):
+    """
+    Convert a CUB file with entries ( , , ) to an array.
+
+    Implemented for 3D cubical complexes here.
+    """
+    rows = []
+    with open( fname ) as fh:
+        if dim == 2:
+            for line in fh.readlines():
+                x = line.strip().split( ',' )
+                rows.append( [int( x[0][1:] ), int( x[1][:-1] )] )
+        elif dim == 3:
+            for line in fh.readlines():
+                x = line.strip().split( ',' )
+                rows.append( [int( x[0][1:] ), int( x[1] ), int( x[2][:-1] )] )
+    return numpy.array( rows, dtype=numpy.int )
 
 def _convert_coords( c ):
     """

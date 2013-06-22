@@ -5,11 +5,6 @@ import numpy# as np
 import re
 import cPickle as pkl
 import tempfile
-try:
-    import pp
-except ImportError:
-    print "No parallel python install"
-    print "We'll try to continue..."
 import time
 from collections import deque
 #from scipy.stats import linregress
@@ -22,8 +17,6 @@ except ImportError:
 
 slash = '/'
 
-
-        
 
 def natural_key(string_):
     """

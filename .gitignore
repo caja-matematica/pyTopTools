@@ -28,6 +28,7 @@ pip-log.txt
 .mr.developer.cfg
 
 # images and data
+*.avi
 *.npy
 *.pdf
 *.png
@@ -38,5 +39,6 @@ pip-log.txt
 *.betti
 *.cbetti
 *.pdia*
+*.vt*
 
 figures/

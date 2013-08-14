@@ -83,19 +83,16 @@ def sublevel( data, height, show_plt=False ):
     nx, ny = data.shape
     G = zeros( (nx,ny,3), dtype=int )
     
-    #outdir = slash.join( fname.split( '/' )[:-1] ) + '/'
-    G[ where( data > int(h) ) ] = [1,1,1]
-    G[ where( data <= int(h) ) ] = [0,0,160]
+    G[ where( data > h ) ] = [1,1,1]
+    G[ where( data <= h ) ] = [0,0,160]
     G[ where( data == 0 ) ] = [1,1,1]
-    # outName = fname.split('/')[-1][:-4] + '_' + str( h )
-    # output = outdir + outName
     
     # now plot stuff
     fig = plt.figure( figsize=(8,8), frameon=False )
     plt.axes( frameon=False )
     ax = fig.gca()
     #ax.set_title( 'sublevel ' + str( h ) )
-    ax.imshow( G )
+    ax.imshow( G, interpolation='nearest' )
     ax.set_xticks( [] )
     ax.set_yticks( [] )
     if show_plt:

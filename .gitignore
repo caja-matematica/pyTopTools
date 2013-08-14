@@ -1,4 +1,4 @@
-q*.py[co]
+*.py[co]
 *.py~
 
 # Packages
@@ -42,3 +42,6 @@ pip-log.txt
 *.vt*
 
 figures/
+data/
+data_for_figs/
+sandbox

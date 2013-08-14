@@ -186,11 +186,12 @@ def plot_diagram_scaled( persFile, fontsize=12, scale=None, color='b',
     ax.plot(diag, diag, 'g-')
 
     # infinite gens
-    inf_idx = np.where( deaths == -1 )[0]
+    inf_idx = np.where( deaths < 0 )[0]
     inf_vec = (maxd + 1) * np.ones( len( inf_idx ) )
 
     # plot the infinite generators
-    ax.plot( births[inf_idx], inf_vec, 'ro', label='Robust generators (num=' + str(len(inf_idx) ) + ')' )
+    ax.plot( births[inf_idx], inf_vec, 'ro', 
+             label='Robust generators (num=' + str(len(inf_idx) ) + ')' )
     # xticks = [ int( tk ) for tk in ax.get_xticks() ]
     # yticks = [ int( tk ) for tk in ax.get_yticks() ]
     ax.set_xticklabels( ax.get_xticks(), fontsize=fontsize )

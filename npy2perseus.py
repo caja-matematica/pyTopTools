@@ -7,7 +7,7 @@ import matplotlib.pylab as plt
 import re
 import os
 import pickle as pkl
-from scipy.spatial import distance
+#from scipy.spatial import distance
 from itertools import izip
 
 space = ' '  # for strings
@@ -86,7 +86,7 @@ def write_timeseries( arr, output, scale=1, block=None, ptype='cub', **kwargs ):
     elif ptype == 'vr':
         write_vr( data, output=output, **kwargs )
 
-def write_cubtop( arr, output, ndim=2, scale=1, dtype=None ):
+def write_cubtop( arr, output, scale=1, dtype=None ):
     """
     Write an array of values to dense cubical toplex Perseus format.
 
@@ -100,7 +100,7 @@ def write_cubtop( arr, output, ndim=2, scale=1, dtype=None ):
     # (or floor)
     if scale != 1:
         arr *= scale
-    if dtype:
+    if dtype is not None:
         arr = np.asarray( arr, dtype=dtype )    
         
     with open( output, 'w' ) as fh:
@@ -116,6 +116,7 @@ def write_cubtop( arr, output, ndim=2, scale=1, dtype=None ):
             # write every value to disk
             for i in xrange( arr.shape[0] ): 
                 for j in xrange( arr.shape[1] ):
+                    # round to nearest integer
                     fh.write( str( int( arr[i,j] ) ) + '\n' )
 
     return output
@@ -154,7 +155,7 @@ def write_scubtop_ND( arr, output ):
         all_nz = izip( *w )
         for nz in all_nz:
             pos = map( str, nz )
-            pos.append( str( arr[nz] ) )
+            pos.append( str( int(arr[nz]) ) )
             pos.append( '\n' )
             fh.write( space.join( pos ) )      
     

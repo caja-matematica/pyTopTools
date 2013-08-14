@@ -9,7 +9,7 @@ from rbc_utils import *
 slash = '/'
 
 
-def plot_hist( ts, nbins=1000, color='b', xlim=None, alpha=0.6, fig=None, **kwargs ):
+def plot_hist( ts, nbins=1000, color='b', xlim=None, alpha=0.6, fig=None, log=True, **kwargs ):
     """
     ts -- single time series of values to bin.
 
@@ -26,12 +26,12 @@ def plot_hist( ts, nbins=1000, color='b', xlim=None, alpha=0.6, fig=None, **kwar
         fig.patch.set_alpha( 0.0 )
     ax = fig.gca()
     if hasattr( ts, "__array__" ):
-        n, bins, patches = ax.hist( ts, bins=nbins, color=color, log=True,
+        n, bins, patches = ax.hist( ts, bins=nbins, color=color, log=log,
                                     edgecolor='none', alpha=alpha, **kwargs )
     else:
         all_n = []
         for d in ts:
-            n, bins, patches = ax.hist( d, bins=nbins, color=color, log=True,
+            n, bins, patches = ax.hist( d, bins=nbins, color=color, log=log,
                                         edgecolor='none', alpha=alpha, **kwargs )
             all_n.append( n )
 
@@ -41,7 +41,7 @@ def plot_hist( ts, nbins=1000, color='b', xlim=None, alpha=0.6, fig=None, **kwar
     #ax.tick_params(axis='both', which='minor', labelsize=8)
     ax.set_ylim( bottom=0.5 ) # accounts for log scale
 
-    if xlim:
+    if xlim is not None:
         ax.set_xlim( xlim[0], xlim[1] )
         
     return fig
@@ -69,9 +69,14 @@ def plot_hist_all( ts, nbins=50, transparent=True, norm_it=False, **kwargs ):
     # now plot a single cell's histogram on the first axis
     #ax.hist( data, **kwargs )
 
+    # convert each list of lifespans to 1d arrays
+    data = [ numpy.asarray( d ) for d in data ]
     xmax = max( [d.max() for d in data] )
     thebins = numpy.linspace(0, xmax, nbins )
+
+    # add/change the kwargs 'bins' key
     kwargs['bins'] = thebins
+
     # holds bins counts (n) for each histogram
     all_ny = []
     for d in data:
@@ -145,6 +150,33 @@ def plot_hist_all( ts, nbins=50, transparent=True, norm_it=False, **kwargs ):
         masked_yi /= y_max
 
     return xi, masked_yi, lower_yi, upper_yi, fig, (n, bins, patches)
+
+
+def plot_all_cell_hists( data, norm_it=True, nbins=100, num_pts=1000, cell_type='new' ):
+    """Same as plot_hist_overlay() below, except that along with the mean
+    over all cells, the outline of the histogram over each individual
+    cell is plotted. Also, the single cell histogram is neglected.
+
+    num_pts : number of points for the interpolation function
+    """
+    fig = plt.figure()
+    ax = fig.gca()
+
+    # lifespans for each cell
+    for lifespans in data:
+        ny, nx = numpy.histogram( data, bins=nbins, density=True )
+        # nx = numpy.arange( 0, num_pts )  
+        # fx = numpy.interp( nx, bins[:-1], ny )
+  
+        # plot the data for this cell
+        ax.plot( nx[:-1], ny, lw=2 )
+
+    #plt.ylim( 0.00001, 0.1 )
+    plt.xlim( right=150 )
+    plt.xlabel( 'Lifespan', fontsize=16 )
+    plt.ylabel( 'Normalized distribution', fontsize=16 )
+    return fig
+
 
 def plot_hist_overlay( ts, persfile=None, single=True, norm_it=True,
                        nbins=100, cell_type='new', vline=None ):

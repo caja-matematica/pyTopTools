@@ -18,7 +18,7 @@ import matplotlib.pylab as plt
 import re
 import os
 import pickle as pkl
-from scipy.spatial import distance
+#from scipy.spatial import distance
 
 
 def write_file ( fname, output ):

@@ -42,12 +42,12 @@ if __name__ == "__main__":
     print "height = ", h
     print low, high
     
-    # do the homology computations
+    # list of images in a block
     B = bmp_block( low, high, h, bmp_path, prefix )
     #cim = P.ChompImage( np.array( B ) )
     
     #vpts = arr2vtk( np.asarray( B ), 'vtktest' )
     
-    # Requires Canopy or at least tvtk installed
+    # Requires Canopy or at least that tvtk is installed
     from pyTopTools import structured_3d_VTK as svtk
-    svtk.numpy2vtk( np.array( B ), 'firn3d' )
+    vpts = svtk.numpy2vtk( np.array( B ), './firn3d' )

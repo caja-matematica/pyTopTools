@@ -101,7 +101,10 @@ class Timeseries( object ):
                 r = space.join( r )
                 r += '\n'
                 fh.write( r )
+
         print "wrote file to ", fargs['persname']
+        
+        self.persin = fargs['persname']
         out = { 'filename' : fargs['persname'],
                 'data' : self.data }
         return out
@@ -124,7 +127,7 @@ class Timeseries( object ):
 
 class Window( Timeseries ):
 
-    def __init__( self, data, tmin=0, tmax=-1, data_type='vr' ):
+    def __init__( self, data, tmin=0, tmax=-1, data_type='vr', dim=0 ):
 
         Timeseries.__init__( self, data, data_type )
         self.tmin = tmin
@@ -135,6 +138,8 @@ class Window( Timeseries ):
             tmax = len( data )
         self.data = self.data[ tmin:tmax ]
         self.persdia = None
+        self.perspath = None
+        self.dim = dim
 
     def compute_persistence( self, fname, output=None, dtype='brips', debug=False ):
         """
@@ -148,59 +153,93 @@ class Window( Timeseries ):
         pers.perseus( fname, output, dtype, debug=debug )
 
         # just load 0-dim diagram for now since we're just working with time series
-        self.persdia = np.loadtxt( output + '_0.txt' )
+        self.persdia = np.loadtxt( output + '_' + str( self.dim ) + '.txt' )
+        self.perspath = output # prefix, must append dim and .txt
 
     def compute_bottleneck_distance( self, other, this_dia=None,
-                                     return_match=False, engine='py' ):
+                                     return_match=False, engine='c' ):
         """
         Compute the bottleneck distance between this the persistence
         diagram for this data and a diagram for 'other'.
-        """
-        # the persistence diagram for this window has not already been computed.
-        if self.persdia is None:
-            try:
-                self.persdia = np.loadtxt( this_dia )
-            except IOError:
-                return
-            self.compute_persistence( self.persdia )
-        if engine =='py':
-            dist, matching = BD.bdist( self.persdia, other )
-            if not return_match:
-                return dist
-            else:
-                return dist, matching
-        # insert call to Miro's C++ bottleneck code
-        elif engine=='c':
-            try:
-                p = sp.check_output( ["bottleneck", this_dia, other] )
-            except:
-                print "subprocess returned an error!"
-            return int( p )
 
-    def compute_wasserstein_distance( self, this_dia, other ):
-        """
-        Compute the Wasserstein distance between self.persdia and other.
+        Diagram for this Window object must have been computed already.
 
         this_dia : path to this window's persistence diagram data
+        (should be stored in self.persout attribute)
 
         other : path to persdia file
         """
+        if this_dia is None:
+            this_dia = self.perspath
+
+        this_dia += '_' + str(self.dim) + '.txt'
+        other += '_' + str(self.dim) + '.txt'
         try:
-            p = sp.check_output( ["wasserstein", this_dia, other] )
+            dist = sp.check_output( ["bottelneck", this_dia, other] )
         except:
             print "subprocess returned an error!"
-        return int( p )
+        return dist
+
+
+        # if engine =='py':
+        #     dist, matching = BD.bdist( self.persdia, other )
+        #     if not return_match:
+        #         return dist
+        #     else:
+        #         return dist, matching
+        # # insert call to Miro's C++ bottleneck code
+        # elif engine=='c':
+        #     try:
+        #         dist = sp.check_output( ["bottleneck", this_dia, other] )
+        #     except:
+        #         print "subprocess returned an error!"
+        #     return dist
+
+    def compute_wasserstein_distance( self, other, this_dia=None ):
+        """Compute the Wasserstein distance between self.persdia and other.
+
+        Diagram for this Window object must have been computed
+        already.
+
+        this_dia : path to this window's persistence diagram data
+        (should be stored in self.persout attribute)
+
+        other : path to persdia file
+        """
+        if this_dia is None:
+            this_dia = self.perspath
+            
+        this_dia += '_' + str(self.dim) + '.txt'
+        other += '_' + str(self.dim) + '.txt'
+        try:
+            dist = sp.check_output( ["wasserstein", this_dia, other] )
+        except:
+            print "subprocess returned an error!"
+        return dist
         
-    def draw_diagram( self, fname=None, dim=0, fig=None, scale=False, **args ):
+    def draw_diagram( self, fname=None, fig=None, scale=1, **args ):
+        """fname : full path to persistence diagram file. 
+        
+        fig : Figure object, in case we want to plot diagram on top of
+        one another (for some reason...)
+
+        scale : This scales (birth,death) pairs. Written for Morse
+        function version of persistence. But useful in that the
+        plot_diagram_scaled() function also plots markers whose size
+        is determined by the number of generators at that (b,d)
+        coordinate.
+
         """
-        """
-        if not fname:
-            fname = self.persdia
-            fname = fname + '_' + str( dim ) + '.txt'
-        if not scale:
-            fig = pers.plot_diagram( fname, fig=fig, **args )
-        else:
-            fig = pers.plot_diagram_scaled( fname, fig=fig, **args )
+        # self.persname was set in compute_wasserstein_distance()
+        if fname is None:
+            fname = self.perspath + '_' + str( self.dim ) + '.txt'
+
+        if scale:
+            fig = pers.plot_diagram_scaled( fname, scale=scale, fig=fig, **args )
+        # if not scale:
+        #     fig = pers.plot_diagram( fname, fig=fig, **args )
+        # else:
+           
         return fig
     
     

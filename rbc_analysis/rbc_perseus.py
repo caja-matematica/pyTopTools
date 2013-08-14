@@ -17,14 +17,14 @@ from multiprocessing import Pool
 from subprocess import call
 import pickle as pkl
 
-def perseus ( fname, output, type='scubtop' ):
+def perseus ( fname, output, dtype='scubtop' ):
     """
     TYPE is input to perseus ex, cubtop, scubtop, etc.
     """
     try:
-        call(['/usr/bin/perseus', type, fname, output])
+        call(['/usr/bin/perseus', dtype, fname, output])
     except:
-        call(['perseus', type, fname, output])
+        call(['perseus', dtype, fname, output])
 
 def run_perseus_All ( type, dir, output):
     """
@@ -52,7 +52,7 @@ def run_perseus_More ( type='scubtop' ):
     for cAbbr in fnames:
         run_perseus (type, fnames[cAbbr], outnames[cAbbr] )#perseus for frames of cell
 
-def run_perseus_All_parallel ( dir, output):
+def run_perseus_All_parallel ( fdir, output):
     """
         Parallel implementation
         """

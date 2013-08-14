@@ -23,7 +23,7 @@ def euler_maruyama( f, g, dt, x, lam, sigma ):
     """
     return x + dt * f( x, lam ) + sqrt( dt ) * gauss( 0, 1 ) * g( x, sigma )
 
-def integrate( f, g, h, x0, nsteps, dt, lam0=0, sigma=0 ):
+def integrate( f, g, h, x0, tmax, dt, lam0=0, sigma=0 ):
     """
     Integrate the stochastic differential equation (Langevin eqn) 
 
@@ -38,7 +38,6 @@ def integrate( f, g, h, x0, nsteps, dt, lam0=0, sigma=0 ):
     lams = [ lam0 ]
 
     # loop optimizations
-    sqdt = sqrt( dt )
     trange = np.linspace( 0, tmax, tmax/dt ) 
     for i in trange:
         # integrate according to Euler-Maruyama
@@ -52,6 +51,23 @@ def integrate( f, g, h, x0, nsteps, dt, lam0=0, sigma=0 ):
         nt.append( nt[-1] + dt )
 
     return nt, nx, lams
+
+def sde_integrator( f, g, h, tmax=10000, xinit=-2, dt=0.01, 
+                    sigma=0.2, lam0=-4 ):
+    """
+    #=======================
+    # Equation 2.2 (double-well potential with noise)
+    #=======================
+    f = lambda x, lam : lam + x - 0.005*x**3
+    g = lambda x, sigma : sigma # * x (spatial variability)
+    h = lambda x, lam : 0.001  #* x 
+    
+    """    
+    #transient = int( 0.5 * tmax/dt )
+    tvec, xvec, lamvec = integrate( f, g, h, xinit, tmax, dt,
+                                    lam0=lam0, sigma=sigma )
+    return tvec, xvec, lamvec
+
 
 def plot_timeseries( nt, nx, color='b', lw=1 ):
     """
@@ -98,6 +114,7 @@ if __name__ == "__main__":
     i1 = int( 2050 / dt )
     a = np.array( xvec[ i0 : i1 ] )
     a -= a.mean()
+
     # right next to bifurcation
     j0 = int( 9370 / dt )
     j1 = int( 9400 / dt )

@@ -368,12 +368,13 @@ def mse_converter( fname ):
     lines = []
     with open( fname ) as fh:
         for line in fh.readlines():
-            if len(line) > 1:  # avoid empty lines
-                if line.startswith('m'):
-                    continue
-                # strip off \n and split on tabs
-                line = line.strip().split( '\t' )
-                lines.append( ( float(line[0]), float(line[1]) ) )
+            if line.startswith('\n'):  # avoid empty lines
+                continue
+            if line.startswith('m'):
+                continue
+            # strip off \n and split on tabs
+            line = line.strip().split( '\t' )
+            lines.append( ( float(line[0]), float(line[1]) ) )
     return numpy.array( lines )
 
         

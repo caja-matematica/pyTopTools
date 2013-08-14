@@ -112,12 +112,16 @@ class PerseusImage( PyImage ):
         self.dim = image.ndim
     
 
-    def write_perseus( self, persfile ):
+    def write_perseus( self, persfile, scale=1, dtype='scubtop' ):
         """
         persfile : path to Perseus file format output
         """
         self.persfile = persfile
-        n2p.write_scubtop_ND( self.data, persfile )
+        if dtype == 'scubtop':
+            n2p.write_scubtop_ND( self.data, persfile )
+        elif dtype == 'cubtop':
+            n2p.write_cubtop( self.data, persfile, scale )
+            
     
     def run_perseus( self, persout, dtype='scubtop' ):
         """
@@ -131,20 +135,24 @@ class PerseusImage( PyImage ):
         self.persout = persout
         perseus.perseus( self.persfile, self.persout, dtype=dtype )
 
-    def draw_persdia( self, dim ):
+    def draw_persdia( self, dim, scale=None, ms=1 ):
         """
         Draw the diagram for the dim'th persistent homology.
-        """
-        sdim = str( dim )
-        pdfile = self.persout + '_' + sdim + '.txt'
-        fig = perseus.plot_diagram( pdfile )
-        return fig
 
+        ms : marker_scale
+        """
+        pdfile = self.persout + '_' + str(dim) + '.txt'
+        if scale is None:
+            fig = perseus.plot_diagram( pdfile )
+        else:
+            fig = perseus.plot_diagram_scaled( pdfile, fontsize=12, scale=scale,
+                                               marker_scale=ms)
+        return fig
 
 
 #====================================
 
-def cap_block( ims, cap_value=255, dtype=np.float ):
+def cap_block( ims, cap_value=255, dtype=np.int, top=True, bottom=True ):
     """Cap a block of data with an array consisting of a single value.
 
     ims : list of image arrays or shape (nx,ny).
@@ -152,41 +160,56 @@ def cap_block( ims, cap_value=255, dtype=np.float ):
     cap_value : corresponds to the value of solid material in an
     image.
 
+    dtype : default value for block array
+
+    top : turn off the top cap
+
+    bottom : turn off the bottom cap
+
     A capped block is returned |------------|, where | == array of
     constant value==cap_value
 
     Note: definitely duplicating ims in memory here!
 
     """
+    if not (top==True or bottom==True):
+        print "At one of 'top' or 'bottom' must be true in order to cap the block."
+        return 
+
+    # just in case we send in a list of 2D images
+    ims = np.asarray( ims, dtype=dtype )
+
+    # stack height == nx, (ny,nz)==image dims
     nx, ny, nz = ims.shape
-    #block = np.zeros( ( nx,ny,len(ims)+2 ), dtype=np.int )
-    block = np.empty( (nz+2, nx, ny), dtype=dtype )
-    thecap = np.empty( (nx,ny), dtype=dtype )
+    
+    # update the dimensions
+    if bottom:
+        nx += 1
+    if top:
+        nx += 1
+
+    block = np.empty( (nx, ny, nz), dtype=dtype )
+
+    thecap = np.empty( (ny,nz), dtype=dtype )
     thecap.fill( cap_value )
         
     # place the cap on the block
-    #block[:,:,0] = block[:,:,-1] = thecap
-    block[0,:,:] = block[-1,:,:] = thecap
+    if bottom:
+        block[0] = thecap
+    if top:
+        block[-1] = thecap
 
     # fill the rest of the block with arrays from ims. Duplicates all
     # of the block in memory!
-    block[1:-1,:,:] = ims
-    # for i,im in enumerate( ims ):
-    #     block[:,:,i+1] = im
-    return block
-                   
+    if top and bottom:
+        block[1:-1] = ims 
+    elif top:
+        block[:-1] = ims
+    else:
+        block[1:] = ims
 
-def build_block( ims ):
-    """
-    Frames : list of PyImage objects
-
-    return n+1 dimensional block, where n=dim of each frame
-    """
-    nx, ny = ims[0].shape
-    block = np.zeros( ( nx,ny,len(ims) ), dtype=np.int )
-    for i,im in enumerate( ims ):
-        block[:,:,i] = im
     return block
+        
 
 #################
 # TESTING
@@ -202,6 +225,7 @@ def test_ChompImage():
     fname = 'sandbox/K09b-23-10-3230.bmp'
     B = PyImage( fname )
     B.bmp2array()
+
     cb = ChompImage( B.data )
     cb.get_cubical_corners()
     cb.cub2file( 'sandbox/CUBTEST.cub' )
@@ -212,14 +236,15 @@ def test_ChompImage():
 def test_blocks():
     prefix = '/data/CT_Firn_Sample/output23-10-3/K09b-23-10-323'
     ims = []
-    for i in range(4):
+    for i in range(1):
         im = PyImage( prefix + str(i) + '.bmp' )
         im.bmp2array()
         ims.append( im.data )
 
-    #print np.array( ims ).shape 
+    ims = np.array(ims) 
 
     #block = build_block( ims )
+    block = cap_block( ims )
 
     #print block.shape
     block = np.array( ims )
@@ -235,21 +260,28 @@ def test_Chomp_blocks():
     cb.extract_betti()
     return cb
 
-def test_block_small():
+def test_block_small( top=True, bottom=True, test_num=0 ):
     ims = [ np.zeros( (3,3), dtype=np.int )
-            for i in range( 3 ) ]
+            for i in range( 5 ) ]
 
     for im in ims: 
         im.fill( 255 )
     
     # Now create a hole in the center (val!=255 will do it)
-    for im in ims:
-        im[1,1] = 0
+    if test_num == 0:
+        for im in ims:
+            im[1,1] = 0
+    # L-shaped divot removed from 2D images
+    elif test_num == 1:
+        for im in ims:
+            im[1,1] = im[1,2] = im[2,1] = 0
 
     ims = np.array( ims )
 
-    c = cap_block( ims )
-#    c = np.array( ims )
+    if top or bottom:
+        c = cap_block( ims, top=top, bottom=bottom )
+    else:
+        c = ims        
     cb = ChompImage( c )
     cb.get_cubical_corners()
     cb.cub2file( 'sandbox/SMALLTEST.cub' )
@@ -262,12 +294,13 @@ def test_Chomp_image_cap():
     """
     prefix = '/data/CT_Firn_Sample/output23-10-3/K09b-23-10-323'
     ims = []
-    for i in range(4):
+    for i in range(1):
         im = PyImage( prefix + str(i) + '.bmp' )
         im.bmp2array()
         ims.append( im.data ) 
 
-    cap = cap_block( ims )
+    #cap = cap_block( ims )
+    cap = np.array( ims )
 
     cb = ChompImage( cap )
     cb.get_cubical_corners()
@@ -380,12 +413,26 @@ if __name__ == "__main__":
 
     # p = test_PyImage()
     #c = test_ChompImage()
-    b = test_blocks()
+    #b = test_blocks()
     #cc = test_Chomp_blocks()
     #ccap = test_Chomp_image_cap()
-    cc, ccims = test_block_small()
+    
+
+    test = 1
+    # cap only top, no bottom
+    #cct, ccimsB = test_block_small( bottom=False, test_num=test )
+
+    # cap bottom, no top
+    #ccb, ccimsT = test_block_small( top=False, test_num=test )
+
+    # cap both ends
+    #cc, ccims = test_block_small( test_num=test )
+
+    # no cap
+    #cno, cnoims = test_block_small( top=False, bottom=False, test_num=test )
+
     #cp, ims = test_cap()
 
-    #pers = test_persistence()
+    pers = test_persistence()
     #pers3 = test_pers_stack()
     #psmall = test_pers_small( cap=True )

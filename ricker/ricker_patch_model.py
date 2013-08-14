@@ -220,8 +220,6 @@ class Ricker( object ):
         """
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
-
-
     
     # ========= END RICKER CLASS ===========
 

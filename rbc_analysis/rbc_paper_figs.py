@@ -16,6 +16,10 @@ global show_plts
 show_plts = False
 
 
+################################
+# PLOT A SINGLE FRAME
+################################
+
 def plot_frame( frame, outname=None ):
     """
     Use pylab.imshow() to plot a frame (npy array). 
@@ -515,10 +519,12 @@ def midrange_stats( fname=None, new=True, stats=False, ngens=False ):
 
     return data_dict
 
-def find_maxes():
+def find_maxes( old_prefix='/data/PerseusData/PerseusOutput/original/2d_sparse/Old/', 
+                new_prefix='/data/PerseusData/PerseusOutput/original/2d_sparse/New/',
+                old_save='./data/old_maxes.pkl'):
     # find the old maxes. do these in sequence to avoid killing
-    # the disk with thousands of minute searches (sigh).
-    old_prefix = '/data/PerseusData/PerseusOutput/original/2d_sparse/Old/'
+    # the disk with thousands of minute searches simultaneously (sigh).
+    old_prefix = old_prefix
     old_dirs= os.listdir( old_prefix )
     old_cells = [ old_prefix + c + slash for c in old_dirs ]
     print "finding maxima for old cells..."
@@ -528,7 +534,7 @@ def find_maxes():
             pkl.dump( old_maxes, fh )
 
     # now find the new maxes
-    new_prefix = '/data/PerseusData/PerseusOutput/original/2d_sparse/New/'
+    new_prefix = new_prefix
     new_dirs= os.listdir( new_prefix )
     new_cells = [ new_prefix + c + slash for c in new_dirs ]
     print "finding maxima for new cells..."
@@ -560,6 +566,7 @@ def midrange_timeseries( old_prefix, new_prefix, eps1, eps2, normed=False, plot_
     
     old_fname = old_prefix + str(eps1) + "_" + str(eps2) + ".pkl"
     new_fname = new_prefix + str(eps1) + "_" + str(eps2) + ".pkl"
+
     # dictionary keyed=cells, values=array of number of midrange
     # generators for each frame of cell
     old_mr = midrange_stats( fname=old_fname, ngens=True )
@@ -606,7 +613,7 @@ def midrange_timeseries( old_prefix, new_prefix, eps1, eps2, normed=False, plot_
         return old_mr, new_mr
 
 
-def make_all_figs():
+def make_all_figs( data_prefix=None, save_prefix=None ):
     """
     Comment/uncomment functions according to desired figs.
 
@@ -623,15 +630,17 @@ def make_all_figs():
     noise = eps = 0.05 # for Gaussian
     alpha = 0.4  # transparency level
 
-    data_prefix = 'data_for_figs/'
-    save_prefix = './figs/'
+    if data_prefix is None:
+        data_prefix = 'data_for_figs/'
+    if save_prefix is None:
+        save_prefix = './figs/'
     # store and return all fig objects for inspection
     figs = {}
 
     #======================
     # FIGURE 1
     #======================
-    if 1:
+    if 0:
         print "Making Figure 1..."
         # single frame of one cell
         frame_path = data_prefix + 'new11_frame2000.npy'
@@ -838,57 +847,69 @@ def make_all_figs():
         ax.set_autoscale_on( False )
         fig13d.savefig( save_prefix + 'new11_frame2000_dia_regions.pdf' )
         figs['cell_new_regions'] = fig13d
-                                         
-    #=====================
-    # FIGURE 5
-    #=====================
+         
+    if 1:
+        #=====================
+        # FIGURE 5
+        #=====================
 
-    # All-lifespan histograms
-    #==========================
-    print ""
-    print "Making Figure 5..."
-    old = data_prefix + 'old_hist_ts.pkl'
-    new = data_prefix + 'new_hist_ts.pkl'
-    #  new = fdir + 'new_hist_ts.pkl'
-    #old = fdir + 'old_hist_ts.pkl'
+        # All-lifespan histograms
+        #==========================
+        print ""
+        print "Making Figure 5..."
+        old = data_prefix + 'old_hist_ts.pkl'
+        new = data_prefix + 'new_hist_ts.pkl'
+        #  new = fdir + 'new_hist_ts.pkl'
+        #old = fdir + 'old_hist_ts.pkl'
 
-    print "  Reading timeseries of NEW lifespans..."
-    with open(new) as fh:
-        A = pkl.load(fh)
+        print "  Reading timeseries of NEW lifespans..."
+        with open(new) as fh:
+            A = pkl.load(fh)
+            A = np.concatenate( A )
+
+        print "\tMaking histogram..."
+        fig14a = rh.plot_hist( A, nbins=200, alpha=0.7 )
+        fig14a.savefig( save_prefix + 'new_hist_all2.pdf' )
+
+        print "  Reading timeseries of OLD lifespans..."
+        with open(old) as fh:
+            B = pkl.load(fh)
+            B = np.concatenate( B )
+
+        print "\tMaking histogram..."
+        fig14b = rh.plot_hist( B, nbins=200, color='r', alpha=0.7 )
+        fig14b.savefig( save_prefix + 'old_hist_all2.pdf' )
+
+        # Zoomed figures with single cell and overlay
+        #=============================================
+        print ""
+        print "Making zoomed, overlayed histograms..."
+        print "\tSometimes a 'divide-by-zero' error occurs. Don't panic, it's just due to "\
+            "the interpolation algorithm not finding generators in certain histogram bins."
+        print ""
+        new_cell = data_prefix + 'new_110125-concatenated-ASCII_2000_1.txt'
+        old_cell = data_prefix + 'old_120125-concatenated-ASCII_2000_1.txt'
+        # fig15a = rh.plot_hist_overlay( A, persfile=new_cell, nbins=500, vline=75 )
+        # fig15b = rh.plot_hist_overlay( B, persfile=old_cell, nbins=500, vline=42, cell_type='old' )
+        fig15a = rh.plot_all_cell_hists( A, nbins=100 )
+        fig15b = rh.plot_all_cell_hists( B, nbins=100 )
+
+        fig15a.savefig( save_prefix + 'new_hist_overlay2.pdf' )
+        fig15b.savefig( save_prefix + 'old_hist_overlay2.pdf' )
+        figs['hist_new'] = fig15a 
+        figs['hist_old'] = fig15b 
+
+    if 0:
+        #==========================
+        # FIGURE 6
+        #==========================
         
-    # print "\tMaking histogram..."
-    # fig14a = rh.plot_hist( A, nbins=200, alpha=0.7 )
-    # fig14a.savefig( save_prefix + 'new_hist_all.pdf' )
-
-    print "  Reading timeseries of OLD lifespans..."
-    with open(old) as fh:
-        B = pkl.load(fh)
-
-    # print "\tMaking histogram..."
-    # fig14b = rh.plot_hist( B, nbins=200, color='r', alpha=0.7 )
-    # fig14b.savefig( save_prefix + 'old_hist_all.pdf' )
-
-    # Zoomed figures with single cell and overlay
-    #=============================================
-    print ""
-    print "Making zoomed, overlayed histograms..."
-    print "\tSometimes a 'divide-by-zero' error occurs. Don't panic, it's just due to "\
-        "the interpolation algorithm not finding generators in certain histogram bins."
-    print ""
-    new_cell = data_prefix + 'new_110125-concatenated-ASCII_2000_1.txt'
-    old_cell = data_prefix + 'old_120125-concatenated-ASCII_2000_1.txt'
-    fig15a = rh.plot_hist_overlay( A, persfile=new_cell, nbins=500, vline=70 )
-    fig15b = rh.plot_hist_overlay( B, persfile=old_cell, nbins=500, vline=55, cell_type='old' )
-    fig15a.savefig( save_prefix + 'new_hist_overlay.pdf' )
-    fig15b.savefig( save_prefix + 'old_hist_overlay.pdf' )
-
-    #==========================
-    # FIGURE 6
-    #==========================
-    print ""
-    print "Making Figure 6..."
-    bt_figs = rg.birth_time_hist( data_prefix, save_prefix )
-    figs['birth_times'] = bt_figs
+        # Birth time histogram
+        #==========================
+        print ""
+        print "Making Figure 6..."
+        bt_figs = rg.birth_time_hist( data_prefix, save_prefix )
+        figs['birth_times'] = bt_figs
         
     return figs
 
@@ -919,6 +940,7 @@ if __name__ == "__main__":
 
 
     # plot some figures!
-    F = make_all_figs()
+    F = make_all_figs( data_prefix='/sciclone/data10/jberwald/RBC/cells/persout/',
+                       save_prefix='./figs_26cells/' )
         
 

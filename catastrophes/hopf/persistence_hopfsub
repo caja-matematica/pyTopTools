@@ -1,0 +1,5 @@
+#!/bin/sh
+
+cd $HOME/github/local/caja-matematica/pyTopTools/catastrophes/hopf
+
+python compute_hopf_diagram_dists.py $run $win

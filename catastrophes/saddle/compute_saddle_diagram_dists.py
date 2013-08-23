@@ -11,7 +11,10 @@ if len( sys.argv ) < 2:
     sys.exit(1)
 
 run = int( sys.argv[1] )
+window_size = int( sys.argv[2] )
 print "run:", run
+print "window:", window_size
+
 
 #=======================
 # Equation 2.2 (double-well potential with noise)
@@ -39,12 +42,12 @@ vrfile = '/sciclone/scr02/jberwald/saddle_' #'./data/sadde_'
 #realizations = 2
 
 # set of range of window sizes
-window_sizes = range( 10, 60, 10 )  # 20-->80, by 10
+#window_sizes = range( 10, 60, 10 )  # 20-->80, by 10
 
 for step_size in window_sizes:
     # all distances at this window size
     all_distances = []
-    # for run in range( realizations ):
+
     tvec, xvec, lamvec = S.sde_integrator( f, g, h, 
                                            tmax, xinit, dt, 
                                            sigma, lam0 )

@@ -14,7 +14,7 @@ def perseus ( fname, output, dtype='scubtop', path=None, debug=False ):
 
     '/usr/bin/perseus DTYPE FNAME OUTPUT'
 
-    fname -- full path to data file
+    fname -- full path data file
 
     output -- prefix of output file, will be appended with
         output_*.txt by perseus

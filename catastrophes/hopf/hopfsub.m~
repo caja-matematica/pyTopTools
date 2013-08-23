@@ -14,8 +14,8 @@ function [] = hopfsub( varargin )
     end
     
     t0 = 0;
-    tfinal = 1000;
-    stepsize=0.05;
+    tfinal = 100;
+    stepsize=0.1;
     steps=floor((tfinal-t0)/stepsize);
     x0 = 0.1; 
     y0 = 0.1;
@@ -39,23 +39,19 @@ function [] = hopfsub( varargin )
         mu(k+1)=((t(k+1)-t0)/(tfinal-t0))*(mu2-mu1)+mu1;   
     end
     
-%     subplot(1,2,1)
-%     % The plot coordinates are x and y
-%     plot (x(:),y(:),'r')
-%     title ('Phase space')
-%     subplot(1,2,2)
-%     % The plot coordinates are mu (the parameter) and x (the x-variable) 
-%     plot(mu(:),x(:),'r')
-%     title('Bifurcation diagram')
-
+    subplot(1,2,1)
+    % The plot coordinates are x and y
+    plot (x(:),y(:),'r')
+    title ('Phase space')
+    subplot(1,2,2)
+    % The plot coordinates are mu (the parameter) and x (the x-variable) 
+    plot(mu(:),x(:),'r')
+    title('Bifurcation diagram')
     z=[mu(:), x(:)];
-    TXY=[t(:),x(:),y(:)]; % JJB -- 2013
     
-    % JJB -- 2013
-    %prefix = './';
-    prefix = '/sciclone/data10/jberwald/climate_attractors/hopfsub/';
+    prefix = 
     if do_trial
-        dlmwrite([prefix,'hopfsub_trial',int2str(trial),'.txt'],TXY);
+        dlmwrite([,prefixint2str(trial),'.txt'],z);
     else
-        dlmwrite([prefix,'hopfsub.txt'],TXY);
+        dlmwrite('/sciclone/data10/jberwald/climate_attractors/hopfsub/hopfsub.txt',z);
     end

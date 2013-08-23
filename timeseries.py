@@ -128,18 +128,24 @@ class Timeseries( object ):
 class Window( Timeseries ):
 
     def __init__( self, data, tmin=0, tmax=-1, data_type='vr', dim=0 ):
+        """
+        data : windowed data from a time series. 
 
+        tmin
+        """
         Timeseries.__init__( self, data, data_type )
         self.tmin = tmin
         self.tmax = tmax
-        if not tmin:
-            tmin = 0
-        if not tmax:
+        if tmax == -1:
             tmax = len( data )
-        self.data = self.data[ tmin:tmax ]
+        if data.ndim > 1:
+            self.data = data
+        else:
+            self.data = self.data[ tmin:tmax ]
         self.persdia = None
         self.perspath = None
         self.dim = dim
+        self.diagram_dim = dim
 
     def compute_persistence( self, fname, output=None, dtype='brips', debug=False ):
         """
@@ -152,8 +158,8 @@ class Window( Timeseries ):
                 output = fname[:-4]
         pers.perseus( fname, output, dtype, debug=debug )
 
-        # just load 0-dim diagram for now since we're just working with time series
-        self.persdia = np.loadtxt( output + '_' + str( self.dim ) + '.txt' )
+        # load diagram for the level we're interested in
+        self.persdia = np.loadtxt( output + '_' + str( self.diagram_dim ) + '.txt' )
         self.perspath = output # prefix, must append dim and .txt
 
     def compute_bottleneck_distance( self, other, this_dia=None,
@@ -172,28 +178,13 @@ class Window( Timeseries ):
         if this_dia is None:
             this_dia = self.perspath
 
-        this_dia += '_' + str(self.dim) + '.txt'
-        other += '_' + str(self.dim) + '.txt'
+        this_dia += '_' + str(self.diagram_dim) + '.txt'
+        other += '_' + str(self.diagram_dim) + '.txt'
         try:
             dist = sp.check_output( ["bottelneck", this_dia, other] )
         except:
             print "subprocess returned an error!"
         return dist
-
-
-        # if engine =='py':
-        #     dist, matching = BD.bdist( self.persdia, other )
-        #     if not return_match:
-        #         return dist
-        #     else:
-        #         return dist, matching
-        # # insert call to Miro's C++ bottleneck code
-        # elif engine=='c':
-        #     try:
-        #         dist = sp.check_output( ["bottleneck", this_dia, other] )
-        #     except:
-        #         print "subprocess returned an error!"
-        #     return dist
 
     def compute_wasserstein_distance( self, other, this_dia=None ):
         """Compute the Wasserstein distance between self.persdia and other.
@@ -209,15 +200,15 @@ class Window( Timeseries ):
         if this_dia is None:
             this_dia = self.perspath
             
-        this_dia += '_' + str(self.dim) + '.txt'
-        other += '_' + str(self.dim) + '.txt'
+        this_dia += '_' + str(self.diagram_dim) + '.txt'
+        other += '_' + str(self.diagram_dim) + '.txt'
         try:
             dist = sp.check_output( ["wasserstein", this_dia, other] )
         except:
             print "subprocess returned an error!"
         return dist
         
-    def draw_diagram( self, fname=None, fig=None, scale=1, **args ):
+    def draw_diagram( self, fname=None, fig=None, scale=1, dim=None, **args ):
         """fname : full path to persistence diagram file. 
         
         fig : Figure object, in case we want to plot diagram on top of
@@ -230,9 +221,12 @@ class Window( Timeseries ):
         coordinate.
 
         """
-        # self.persname was set in compute_wasserstein_distance()
+        if dim is None:
+            dim = self.diagram_dim
+
+        # self.perspath was set in compute_wasserstein_distance()
         if fname is None:
-            fname = self.perspath + '_' + str( self.dim ) + '.txt'
+            fname = self.perspath + '_' + str( diagram_dim ) + '.txt'
 
         if scale:
             fig = pers.plot_diagram_scaled( fname, scale=scale, fig=fig, **args )
@@ -241,5 +235,104 @@ class Window( Timeseries ):
         # else:
            
         return fig
+
+
+class WindowND( Window ):
+    """
+    Implements specialized methods for writing ndarrays to Perseus
+    format. 
+    """
+    def __init__( self, data, data_type='vr', diagram_dim=1 ):
+        Window.__init__( self, data, data_type )
+        self.dim = data.ndim
+        self.diagram_dim = diagram_dim
+
+    def __repr__( self ):
+        s = "WindowND timeseries with " +str( len(self.data) )+ \
+            " points in R^"+str( self.dim )
+        return s
+        
+    # this trumps the method in Timeseries class
+    def convert2perseus( self, persname, **kwargs ):
+        """
+        Convert an array, or text or numpy file to perseus format.
+
+        data -- numpy array
+
+        Writes a 1D point cloud to Persues-readable Vietoris-Rips format.
+        """
+        space = " "
+        fargs = {'radius_scaling' : 1,
+                 'stepsize' : 0.02,
+                 'nsteps' : 10,
+                 'bradius' : 0.0,
+                 'embed_dim' : self.dim
+                 }
+        fargs.update( kwargs )
+
+        # fix up end of filename
+        fargs['persname'] = persname
+        if not fargs['persname'].endswith( 'txt' ):
+            fargs['persname'] += '.txt'
+
+        # This gets appended to the end of every line
+        br = str( fargs['bradius'] )
+
+        with open( fargs['persname'], 'w' ) as fh:
+            # ambient dimension
+            fh.write( str( fargs['embed_dim'] )+'\n' )
+
+            # initial threshold, step size, num steps, dimension cap==ny
+            params = [ str( fargs['radius_scaling'] ),
+                       str( fargs['stepsize'] ),
+                       str( fargs['nsteps'] )
+                       ]
+            params = space.join( params )
+            params += '\n'
+            fh.write( params )
+
+            # now write the timeseries and birth radii to disk
+            for obs in self.data:
+                try:
+                    r = [ str( x ) for x in obs ]
+                except TypeError:
+                    # quicker than if/else 
+                    r = [ str( obs ) ]
+                r += [ br ] # add the birth radius
+                r = space.join( r )
+                r += '\n'
+                fh.write( r )
+
+        print "wrote file to ", fargs['persname']
+        
+        self.persin = fargs['persname']
+        out = { 'filename' : fargs['persname'],
+                'data' : self.data }
+        return out
+
+
+    def draw_data( self, **kwargs ):
+        """
+        Only implemented for 2D (maybe later for 3D).
+        """
+        if self.dim == 2:
+            fig = plt.figure()
+            ax = fig.gca()
+            ax.plot( self.data[:,0], self.data[:,1], 
+                     'b.', ms=2, **kwargs )
+            return fig
+        else:
+            print "Data must be 2D!"
+
+
     
-    
+# Handy functions, but general enough to be left out of the above classes
+def moving_average( X, window_size, mode='same' ):
+    """
+    Computes the moving average over the time series X, with a moving
+    window of size 'window_size'.
+
+    See np.convolve() for help with 'mode'.
+    """
+    window = np.ones(int(window_size))/float(window_size)
+    return np.convolve( X, window, mode=mode)

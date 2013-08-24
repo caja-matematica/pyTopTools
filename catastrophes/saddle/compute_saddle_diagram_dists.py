@@ -33,8 +33,9 @@ sigma = 0.2
 lam0 = -4
 
 # data path
+vrdata = '/sciclone/scr20/jberwald/saddle_'
 prefix = '/sciclone/data10/jberwald/climate_attractors/saddle_node/saddle_'
-vrfile = '/sciclone/scr02/jberwald/saddle_' #'./data/sadde_'
+#vrfile = '/sciclone/scr02/jberwald/saddle_' #'./data/sadde_'
 
 #vrfile = './data/saddle_'
 
@@ -71,8 +72,8 @@ for step_size in window_sizes:
 
         w = int( left * dt )
         nx.append( w )
-        persin = vrfile + 'w'+ str( w ) + '_step'+\
-                 str( step_size ) + '_trial'+ str( run ) + '.txt'
+        persin = vrdata + 't'+ str( w ) + '_window'+\
+                 str( window_size ) + '_trial'+ str( run ) + '.txt'
         
         current_window.convert2perseus( persin, 
                                         stepsize=0.0005, nsteps=50 )
@@ -95,7 +96,7 @@ for step_size in window_sizes:
     distarr = np.asarray( all_distances )
     
     # save an array of  distances for this step_size
-    np.savetxt( prefix + 'distances_step'+str( step_size ) +'_trial'+str( run )+'.txt', distarr )
+    np.savetxt( prefix + 'distances_step'+str( window_size ) +'_trial'+str( run )+'.txt', distarr )
 
     # mean_dist = distarr.mean( axis=0 )
     # np.savetxt( prefix + 'mean_distances_step'+str( step_size ) + '.txt', mean_dist )

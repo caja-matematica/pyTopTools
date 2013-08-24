@@ -34,7 +34,8 @@ step_size = 5
 # path to realization 'run'
 prefix = '/sciclone/data10/jberwald/climate_attractors/hopfsub/hopfsub_trial'
 # output path for Perseus and distance data
-dist_prefix = '/sciclone/data10/jberwald/climate_attractors/hopfsub_dist_step'+\
+dist_data = '/sciclone/scr10/jberwald/hopfsub_'
+dist_prefix = '/sciclone/data10/jberwald/climate_attractors/hopfsub_dist_step_'+\
     str(step_size) + '/hopfsub_' 
 
 # --> If we are not passing in both run and window size for batch
@@ -81,10 +82,12 @@ while w0 < w1:
     # compute persistence diagrams. Use WindowND for dim > 1
     current_window = timeseries.WindowND( window, diagram_dim=1 )
 
-    w = left
-    nx.append( w )
-    persin = dist_prefix + 'w'+ str( w ) + '_step'+\
-             str( step_size ) + '_trial'+ str( run ) + '.txt'
+    # w = left
+    # nx.append( w )
+
+    # path and file name of data cloud in erseus format
+    persin = dist_data + 't' + str( left ) + '_window'+\
+             str( window_size ) + '_trial'+ str( run ) + '.txt'
 
     # stepsize and nsteps are fairly snesitive wrt to diagram
     # output as well as computation time!

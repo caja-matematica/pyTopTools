@@ -73,8 +73,8 @@ else:
     # a static picture of what's going on (bif. around 9400 in this
     # realization)
     print "Loading data from disk..."
-    tvec = np.loadtxt( './saddle/saddle_tvec.txt' )
-    xvec = np.loadtxt( './saddle/saddle_xvec.txt' )
+    tvec = np.loadtxt( './saddle_tvec.txt' )
+    xvec = np.loadtxt( './saddle_xvec.txt' )
 
 
 # linear regression slope to each distance array, for t \in
@@ -131,7 +131,7 @@ fig, axarr = plt.subplots(2, 2, figsize=(20,8) )
 axarr[0,0].plot( tvec[::100], xvec[::100], 'b-' )
 #axarr[0,0].set_xlabel( 'time', fontsize=16 )
 axarr[0,0].set_ylabel( r'$x(t)$', fontsize=16 )
-axarr[0,0].set_title( '$1D$ saddle bifurcation', fontsize=18 )
+axarr[0,0].set_title( 'Saddle-node bifurcation', fontsize=18 )
 #
 # right plot, uses subt = subt_1 \cup subt_2
 # ZOOMED region
@@ -172,13 +172,14 @@ ytop = 1000
 ax2.set_xlim( left_lim, right_lim +right_buffer )
 #ax2.set_ylim( ybottom, ytop )
 ax2.set_xlabel( 'time', fontsize=label_size )
-ax2.set_ylabel( r'Wasserstein 2-norm $D_i = d_2(P_i^w, P_{i+1}^w)$'+'\n(log scale)', fontsize=label_size )
+ax2.set_ylabel( r'$D_i = d_2(P_i^w, P_{i+1}^w)$ (log)', fontsize=label_size )
 ax2.legend( loc='upper left', fontsize='x-small' )
 #plt.show()
 
 ####
 # moving averages of the distances
 ####
+
 #fig3 = plt.figure(3, figsize=(10,8) )
 ax3 = axarr[1,1]
 

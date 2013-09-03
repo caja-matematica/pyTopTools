@@ -6,8 +6,9 @@ import sys
 from pyTopTools.catastrophes import saddle_node as S
 from pyTopTools import timeseries
 
-if len( sys.argv ) < 2:
-    print "Meant to be used in batch format, must provide a 'run number'"
+if len( sys.argv ) < 3:
+    print "Meant to be used in batch format, must provide a 'run number'"\
+        " and 'window_size'"
     sys.exit(1)
 
 run = int( sys.argv[1] )
@@ -33,7 +34,7 @@ h = lambda x, lam : 0.001  #* x
 #=======================
 tmax = 11000
 xinit = -2
-dt = 0.01
+dt = 0.05
 sigma = 0.2
 lam0 = -4
 
@@ -42,6 +43,7 @@ dist_prefix = '/sciclone/data10/jberwald/climate_attractors/saddle_node_step2_5/
 
 # path to store persistence diagrams
 vrfile = '/sciclone/data10/jberwald/climate_attractors/saddle/saddle_'
+#vrfile = './data/sadde_'
 
 all_distances = []
 
@@ -57,6 +59,7 @@ w1 = int( 0.9 * tmax )
 previous_window = None
 distances = []
 nx = []
+
 while w0 < w1:
     # nearest index to w0 
     left = int( w0 / dt )
@@ -85,19 +88,16 @@ while w0 < w1:
     # update
     previous_window = current_window
     w0 += step_size
-
     all_distances.append( distances )
     
-    # now average the distances over the realizations at this window
-    # size. make (n realizations) x (windows) array 
-    distarr = np.asarray( all_distances )
+# now average the distances over the realizations at this window
+# size. make (n realizations) x (windows) array 
+distarr = np.asarray( all_distances )
     
-    # save an array of  distances for this step_size
-    np.savetxt( dist_prefix + 'distances_step'+str( window_size ) +'_trial'+str( run )+'.txt', 
-                distarr )
+# save an array of  distances for this step_size
+np.savetxt( dist_prefix + 'distances_step'+str( window_size ) +'_trial'+str( run )+'.txt', 
+            distarr )
 
-    # mean_dist = distarr.mean( axis=0 )
-    # np.savetxt( prefix + 'mean_distances_step'+str( step_size ) + '.txt', mean_dist )
 
 
 

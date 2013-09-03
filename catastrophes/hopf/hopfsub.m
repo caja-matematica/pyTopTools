@@ -9,12 +9,14 @@ function [] = hopfsub( varargin )
     if length( varargin ) == 0
         do_trial = false;
     else
+      % append 'trial' number to end of filename (see dlmwrite() below)
         do_trial = true;
         trial = varargin{1};    
     end
     
     t0 = 0;
     tfinal = 1000;
+    % for numerical integrator
     stepsize=0.05;
     steps=floor((tfinal-t0)/stepsize);
     x0 = 0.1; 
@@ -53,7 +55,7 @@ function [] = hopfsub( varargin )
     
     % JJB -- 2013
     %prefix = './';
-    prefix = '/sciclone/data10/jberwald/climate_attractors/hopfsub/';
+    prefix = '/sciclone/data10/jberwald/climate_attractors/hopfsub_data_persStep50/';
     if do_trial
         dlmwrite([prefix,'hopfsub_trial',int2str(trial),'.txt'],TXY);
     else

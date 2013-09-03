@@ -226,16 +226,16 @@ class Window( Timeseries ):
 
         # self.perspath was set in compute_wasserstein_distance()
         if fname is None:
-            fname = self.perspath + '_' + str( diagram_dim ) + '.txt'
+            fname = self.perspath + '_' + str( dim ) + '.txt'
 
         if scale:
-            fig = pers.plot_diagram_scaled( fname, scale=scale, fig=fig, **args )
+            fig = pers.plot_diagram_scaled( fname, scale=scale, fig=fig,
+                                            inf_value=self.inf_value, **args )
         # if not scale:
         #     fig = pers.plot_diagram( fname, fig=fig, **args )
         # else:
            
         return fig
-
 
 class WindowND( Window ):
     """
@@ -304,8 +304,10 @@ class WindowND( Window ):
                 fh.write( r )
 
         print "wrote file to ", fargs['persname']
-        
+
+        # store some constant values
         self.persin = fargs['persname']
+        self.inf_value = fargs['nsteps']
         out = { 'filename' : fargs['persname'],
                 'data' : self.data }
         return out
@@ -315,11 +317,18 @@ class WindowND( Window ):
         """
         Only implemented for 2D (maybe later for 3D).
         """
+        fargs = { 'ms': 2,
+                  'color' : 'b',
+                  'marker' : '.'
+                  }
+        fargs.update( kwargs )
+
         if self.dim == 2:
             fig = plt.figure()
             ax = fig.gca()
-            ax.plot( self.data[:,0], self.data[:,1], 
-                     'b.', ms=2, **kwargs )
+            cs = fargs['color'] + fargs['marker']
+            ax.plot( self.data[:,0], self.data[:,1], cs, 
+                     **fargs )
             return fig
         else:
             print "Data must be 2D!"

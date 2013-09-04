@@ -173,7 +173,8 @@ ax2.set_xlim( left_lim, right_lim +right_buffer )
 #ax2.set_ylim( ybottom, ytop )
 ax2.set_xlabel( 'time', fontsize=label_size )
 ax2.set_ylabel( r'$D_i = d_2(P_i^w, P_{i+1}^w)$ (log)', fontsize=label_size )
-ax2.legend( loc='upper left', fontsize='x-small' )
+leg2 = ax2.legend( loc='upper left', fontsize='x-small' )
+leg2.get_frame().set_alpha( 0.0 )
 #plt.show()
 
 ####
@@ -225,6 +226,7 @@ ax3.set_xlabel( 'time', fontsize=label_size )
 #                 fontsize=label_size )
 ax3.set_ylabel( r'Derivative: $\Delta_i = D_i - D_{i-1}$',
                 fontsize=label_size )
-ax3.legend( loc='lower left',fontsize='x-small' )
+leg3 = ax3.legend( loc='lower left',fontsize='x-small' )
+leg3.get_frame().set_alpha( 0.0 )
 
 plt.show()

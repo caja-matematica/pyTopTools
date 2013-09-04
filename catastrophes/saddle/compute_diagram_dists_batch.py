@@ -42,6 +42,7 @@ lam0 = -4
 dist_prefix = '/sciclone/data10/jberwald/climate_attractors/saddle_node_step2_5/saddle_'
 
 # path to store persistence diagrams
+
 vrfile = '/sciclone/data10/jberwald/climate_attractors/saddle/saddle_'
 #vrfile = './data/sadde_'
 
@@ -72,8 +73,8 @@ while w0 < w1:
 
     w = int( left * dt )
     nx.append( w )
-    persin = vrfile + 'w'+ str( w ) + '_step'+\
-             str( step_size ) + '_trial'+ str( run ) + '.txt'
+    persin = vrdata + 't'+ str( w ) + '_window'+\
+             str( window_size ) + '_trial'+ str( run ) + '.txt'
 
     current_window.convert2perseus( persin, 
                                     stepsize=0.0005, nsteps=50 )
@@ -97,6 +98,7 @@ distarr = np.asarray( all_distances )
 # save an array of  distances for this step_size
 np.savetxt( dist_prefix + 'distances_step'+str( window_size ) +'_trial'+str( run )+'.txt', 
             distarr )
+
 
 
 

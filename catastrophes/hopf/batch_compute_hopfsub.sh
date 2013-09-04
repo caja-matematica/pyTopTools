@@ -7,7 +7,7 @@ foreach trial (`seq 1 30`)
     foreach window (`seq 100 25 200`)
 	echo $trial
 	echo $window
-	qsub -v run=$trial,win=$window -l nodes=1:x5672:ppn=1 -l walltime=10:00:00 persistence_hopfsub;
+	qsub -v run=$trial,win=$window -l nodes=1:x5672:ppn=1 -l walltime=20:00:00 persistence_hopfsub;
     end
 end
 

@@ -159,7 +159,14 @@ class Window( Timeseries ):
         pers.perseus( fname, output, dtype, debug=debug )
 
         # load diagram for the level we're interested in
-        self.persdia = np.loadtxt( output + '_' + str( self.diagram_dim ) + '.txt' )
+        try:
+            self.persdia = np.loadtxt( output + '_' + str( self.diagram_dim ) + '.txt' )
+        # disk latency, if lots of IO, can cause a delay in the buffer
+        # flushing to disk, and hence a "file does not exist error"
+        except IOError:
+            time.sleep( 1 )
+            self.persdia = np.loadtxt( output + '_' + str( self.diagram_dim ) + '.txt' )
+            
         self.perspath = output # prefix, must append dim and .txt
 
     def compute_bottleneck_distance( self, other, this_dia=None,

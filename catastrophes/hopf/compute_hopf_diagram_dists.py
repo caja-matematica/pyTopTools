@@ -32,7 +32,7 @@ print "window:", window_size
 #step_size = 5
 
 # simple overlappers
-step_size = int( window_size / 2 )
+step_size = int( window_size )
 
 # path to realization 'run'
 # prefix = '/sciclone/data10/jberwald/climate_attractors/hopfsub/hopfsub_trial'
@@ -41,20 +41,17 @@ step_size = int( window_size / 2 )
 #     str(step_size) + '/hopfsub_' 
 
 # for non-overlapping windows
-prefix = '/sciclone/data10/jberwald/climate_attractors/hopfsub_data_persStep50/hopfsub_trial'
+#prefix = '/sciclone/data10/jberwald/climate_attractors/hopfsub_data_persStep50/hopfsub_trial'
+
 # output path for Perseus and distance data
-<<<<<<< HEAD
-dist_prefix = '/sciclone/data10/jberwald/climate_attractors/hopfsub_dist_persStep_50' +\
-    '/hopfsub_' 
+# dist_prefix = '/sciclone/data10/jberwald/climate_attractors/hopfsub_dist_persStep_50' +\
+#     '/hopfsub_' 
 
 # for testing
-# prefix = './hopfsub_trial'
-# dist_prefix = '../data/hopfsub_'
-=======
-dist_data = '/sciclone/scr10/jberwald/hopfsub_'
-dist_prefix = '/sciclone/data10/jberwald/climate_attractors/hopfsub_dist_step_'+\
-    str(step_size) + '/hopfsub_' 
->>>>>>> 581ec5f3e6dda543315bc2c9578e1e87dd636082
+#prefix = '/ima/imausr1/jberwald/data/climate/hopfsub_data_persStep50/hopfsub_trial'
+prefix = '/ima/imausr1/jberwald/data/climate/hopf_sigma05/hopfsub_trial'
+dist_prefix = '../data/hopfsub_'
+
 
 # --> If we are not passing in both run and window size for batch
 # processing use the sequence of sizes below. Set of range of window
@@ -75,7 +72,7 @@ tvec = data[:,0] # time vector
 xy = data[:,1:]  # x,y coords
 
 # for testing
-#xy = xy[11000:13000]
+xy = xy[7000:8000]
 
 tmax = len( xy )
 
@@ -87,7 +84,7 @@ distances = []
 nx = []
 
 # for testing
-# all_windows = []
+all_windows = []
 
 # for each realization, move the (non-overlapping) window
 # along the time series
@@ -105,8 +102,8 @@ while w0 < w1:
     # w = left
     # nx.append( w )
 
-    # path and file name of data cloud in erseus format
-    persin = dist_data + 't' + str( left ) + '_window'+\
+    # path and file name of data cloud in perseus format
+    persin = dist_prefix + 'w' + str( left ) + '_window'+\
              str( window_size ) + '_trial'+ str( run ) + '.txt'
 
     # stepsize and nsteps are fairly snesitive wrt to diagram output
@@ -127,6 +124,7 @@ while w0 < w1:
         distances.append( float(dist) )
         
     # update
+    all_windows.append( current_window )
     previous_window = current_window
     w0 += step_size
 
@@ -136,8 +134,8 @@ all_distances.append( distances )
 distarr = np.asarray( all_distances )
 
 # save an array of  distances for this step_size
-np.savetxt( dist_prefix + 'distances_window'+str( window_size ) +'_trial'+str( run )+'.txt', 
-            distarr )
+# np.savetxt( dist_prefix + 'distances_window'+str( window_size ) +'_trial'+str( run )+'.txt', 
+#             distarr )
 
 # mean_dist = distarr.mean( axis=0 )
 # np.savetxt( prefix + 'mean_distances_step'+str( step_size ) + '.txt', mean_dist )

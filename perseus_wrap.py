@@ -120,8 +120,8 @@ def find_unique( arr ):
 
 
 def plot_diagram_scaled( persFile, fontsize=12, scale=None, color='b',
-                         show_fig=True, fig=None, title=None, 
-                         inf_value=None, marker_scale=1 ):
+                         show_fig=True, fig=None, title=None, resize=False,
+                         inf_value=None, marker_scale=1, show_legend=False ):
     """
     This is the smae as plot_diagram(), except that each point on the
     diagram is scaled in relation to its number of occurences in the
@@ -175,17 +175,24 @@ def plot_diagram_scaled( persFile, fontsize=12, scale=None, color='b',
     if not fig:
         fig = plt.figure( ) 
         fig.patch.set_alpha( 0.0 )
-    ax = fig.gca()
+    try:
+        ax = fig.gca()
+    # in case we pass in the axes instance itself
+    except AttributeError:
+        ax = fig
 
     if len( normal_idx ) > 0:
         for u in uniq_idx:
-            size = marker_scale*len( u )
+            if resize:
+                size = marker_scale*len( u )
+            else:
+                size = marker_scale
             ax.plot( births[ u ], deaths[ u ],
-                     color+'o', ms=size, alpha=0.5 )
+                     color+'o', ms=size, alpha=0.8 )
             # ax.plot( births[normal_idx], deaths[normal_idx], ,
             #          color+'o', )
 
-    # create diagonal
+    # create and plot the diagonal
     diag = [0, maxd+2]
     ax.plot(diag, diag, 'g-')
 
@@ -207,7 +214,8 @@ def plot_diagram_scaled( persFile, fontsize=12, scale=None, color='b',
     ax.set_ylim( bottom=0 )
 
     # legend displaying number of robust/infinite generators
-    ax.legend( loc=4 ) # 4 == lower right
+    if show_legend:
+        ax.legend( loc=4 ) # 4 == lower right
     
     if title:
         ax.set_title( title, fontsize=16 )

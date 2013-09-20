@@ -6,6 +6,23 @@ import rbc_histogram as rh
 
 from collections import defaultdict
 
+def track_gens( genarr, err=40 ):
+    """
+    Given the stability of persistence diagrams, we expect that
+    different generators are no indistinghuishable whenever |b-b'| <
+    \eps and |d-d'| < \eps.
+
+    genarr : list of n x 2 numpy arrays consisting of all generators
+    with lifespan > noise (usually 40)
+
+    Latest robust gens located in /sciclone/data10/jberwald/RBC/cells/persout.
+    """
+    bt = []
+    for frame in genarr:
+        
+    
+
+
 def get_gens ( fname, rmv='',data = ''):
     """
         Get generators function

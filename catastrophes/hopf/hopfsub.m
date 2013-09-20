@@ -17,11 +17,11 @@ function [] = hopfsub( varargin )
     t0 = 0;
     tfinal = 1000;
     % for numerical integrator
-    stepsize=0.05;
+    stepsize=0.1;
     steps=floor((tfinal-t0)/stepsize);
     x0 = 0.1; 
     y0 = 0.1;
-    sigma=0.1;  
+    sigma=0.05;  
     mu1 = -0.75;
     mu2 = 0;
     %mu0 = 0;
@@ -54,8 +54,8 @@ function [] = hopfsub( varargin )
     TXY=[t(:),x(:),y(:)]; % JJB -- 2013
     
     % JJB -- 2013
-    %prefix = './';
-    prefix = '/sciclone/data10/jberwald/climate_attractors/hopfsub_data_persStep50/';
+    prefix = '/ima/imausr1/jberwald/data/climate/hopf_sigma05/';
+    %prefix = '/sciclone/data10/jberwald/climate_attractors/hopfsub_data_persStep50/';
     if do_trial
         dlmwrite([prefix,'hopfsub_trial',int2str(trial),'.txt'],TXY);
     else

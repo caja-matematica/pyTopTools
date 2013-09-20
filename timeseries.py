@@ -105,6 +105,7 @@ class Timeseries( object ):
         print "wrote file to ", fargs['persname']
         
         self.persin = fargs['persname']
+        self.inf_value = fargs['nsteps']
         out = { 'filename' : fargs['persname'],
                 'data' : self.data }
         return out
@@ -188,7 +189,7 @@ class Window( Timeseries ):
         this_dia += '_' + str(self.diagram_dim) + '.txt'
         other += '_' + str(self.diagram_dim) + '.txt'
         try:
-            dist = sp.check_output( ["bottelneck", this_dia, other] )
+            dist = sp.check_output( ["bottleneck", this_dia, other] )
         except:
             print "subprocess returned an error!"
         return dist

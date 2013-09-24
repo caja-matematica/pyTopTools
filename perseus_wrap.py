@@ -210,8 +210,8 @@ def plot_diagram_scaled( persFile, fontsize=12, scale=None, color='b',
     ax.set_xlabel( 'birth', fontsize=fontsize )
     ax.set_ylabel( 'death', fontsize=fontsize )
     # fix the left x-axis boundary at 0
-    ax.set_xlim( left=0 )
-    ax.set_ylim( bottom=0 )
+    ax.set_xlim( left=0, right=maxd+2 )
+    ax.set_ylim( bottom=0, top=maxd+2 )
 
     # legend displaying number of robust/infinite generators
     if show_legend:

@@ -13,9 +13,11 @@ Container for operations on persistence diagrams. Eg.,
 """
 import numpy as np
 import subprocess as sp
+import tempfile
 
 # local stuff
 from pyTopTools import perseus_wrap as pers
+
 
 class Diagram( object ):
     """
@@ -24,18 +26,25 @@ class Diagram( object ):
     input: Perseus diagram output at a given
     dimension. filename_'dim'.txt
     """
-    def __init__( self, filename, dim=None, inf=None ):
+    def __init__( self, diagram, dim=None, inf=None ):
         """
-        filename : full path to diagram file on disk. 
+        diagram : full path to diagram file on disk, or array
+        containing diagram information.
 
         dim : [optional] We can extract this from the filename if
         necessary.
         """
-        # for distance functions
-        self.diagram = filename 
-     
-        # in case we need the data for other applications
-        self.data = np.loadtxt( filename )
+        # diagram is an array, so save a temp file for distance
+        # functions to read
+        if hasattr( diagram, '__array__' ):
+            fh = tempfile.NamedTemporaryFile(delete=False)
+            np.savetxt( fh, diagram )
+            self.data = diagram
+            self.diagram = fh.name
+        else:
+            self.diagram = diagram
+            # in case we need the data for other applications
+            self.data = np.loadtxt( diagram )
         
         # the 'infinite' value usually comes from the maximum number
         # of steps in growing epsilon balls (say). If we don't have
@@ -68,11 +77,14 @@ class Diagram( object ):
         ('python'). Not implemented.
         """
         this_dia = self.diagram
+        # grab the filename of the diagram if necessary
+        if hasattr( other, 'diagram' ):
+            other = other.diagram 
         try:
             dist = sp.check_output( ["bottleneck", this_dia, other] )
         except:
             print "subprocess returned an error!"
-        return dist
+        return float( dist )
 
     def compute_wasserstein_distance( self, other ):
         """Compute the Wasserstein distance between self.persdia and other.
@@ -86,11 +98,14 @@ class Diagram( object ):
         other : path to persdia file
         """
         this_dia = self.diagram
+        # grab the filename of the diagram if necessary
+        if hasattr( other, 'diagram' ):
+            other = other.diagram 
         try:
             dist = sp.check_output( ["wasserstein", this_dia, other] )
         except:
             print "subprocess returned an error!"
-        return dist
+        return float( dist )
         
     def draw_diagram( self, fig=None, scale=1, dim=None, **args ):
         """fname : full path to persistence diagram file. 

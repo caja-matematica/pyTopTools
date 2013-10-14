@@ -345,6 +345,7 @@ def run_mse( fname, **args ):
     Eventually will correspond to MSE args (type 'mse --help' for more
     info).
     """
+    # incase data is stored as a npy file
     try:
         data = numpy.load( fname )
         fname = fname[:-3] + 'txt'
@@ -353,7 +354,10 @@ def run_mse( fname, **args ):
         pass
         
     # form the command to pass to subprocess
-    outfile = fname[:-3] + 'mse'
+    if fname.endswith( '.txt' ):
+        outfile = fname[:-3] + 'mse'
+    else:
+        outfile = fname + '.mse'
     cmd = 'mse <'+ fname + '>'+outfile
     try:
         p = subprocess.Popen( cmd, shell=True )

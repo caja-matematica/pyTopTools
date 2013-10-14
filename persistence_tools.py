@@ -150,3 +150,38 @@ class Window( Timeseries ):
         pers.plot_diagram( fname, fig=fig )
     
     
+## Useful conversion routines
+
+def diagrams2cellarray( dia_list, outname, chop_inf=True, mat_type=np.float ):
+    """dia_list : n-length list of k x 2 diagrams
+
+    outname : name of output file. '.mat' will be automatically appended.
+
+    Optional:
+    --------
+
+    chop_inf : Remove the row corresponding to the infinite generator.
+
+    mat_type : some matlab programs expect a certain data type for
+    diagrams (eg. Error using '+' will be thrown). defaults to
+    double. Standard options should diverge far from np.int, np.float,
+    np.int64, etc.
+
+    Recipe from http://docs.scipy.org/doc/scipy/reference/tutorial/io.html#matlab-cell-arrays
+
+    """
+    import scipy.io as sio
+    n = len( dia_list )
+    # object array to hold different length diagrams. Exclude the last
+    # (inf) generator if chop_inf==True.
+    C = np.zeros( (n,), dtype=np.object )
+    
+    for i,d in enumerate( dia_list ):
+        # exclude last row
+        if chop_inf:
+            d = d[:-1]
+        if d.dtype != mat_type:
+            d = d.astype( mat_type )
+        C[i] = d
+    sio.savemat( outname+'.mat', { 'diagrams': C } )
+    

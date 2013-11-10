@@ -87,7 +87,7 @@ if __name__ == "__main__":
 
     tmax = 10000
     xinit = -2
-    dt = 0.01
+    dt = 0.1
     sigma = 0.2
     lam0 = -4
     transient = int( 0.5 * tmax/dt )
@@ -110,16 +110,29 @@ if __name__ == "__main__":
     # fig2.show()
 
     # far from bifurcation
-    i0 = int( 2020 / dt )
+    i0 = int( 2000 / dt )
     i1 = int( 2050 / dt )
     a = np.array( xvec[ i0 : i1 ] )
     a -= a.mean()
 
-    # right next to bifurcation
-    j0 = int( 9370 / dt )
-    j1 = int( 9400 / dt )
+
+    # just to the right
+    j0 = int( 2050 / dt )
+    j1 = int( 2100 / dt )
     b = np.array( xvec[ j0 : j1 ] )
     b -= b.mean()
+
+    # now next to the bif.
+    i0 = int( 9300 / dt )
+    i1 = int( 9350 / dt )
+    c = np.array( xvec[ i0 : i1 ] )
+    c -= c.mean()
+
+    # right next to bifurcation
+    j0 = int( 9350 / dt )
+    j1 = int( 9400 / dt )
+    d = np.array( xvec[ j0 : j1 ] )
+    d -= d.mean()
 
     # fig3 = plt.figure()
     # ax3 = fig3.gca()
@@ -137,27 +150,58 @@ if __name__ == "__main__":
     # fig4.savefig('figures/state_distribution_near_bif.png', transparent=True )
     # fig4.show()
 
-    fig5 = plt.figure()
-    ax5 = fig5.gca()
-    ax5.plot( a, 'b-', lw=2, label='Far from transition' )
-    ax5.plot( b, 'r--', lw=2, label='Near transition' )
-    ax5.set_xlabel( r'$t$ (time step in window)', fontsize=14 )
-    ax5.set_ylabel( r'$x(t)$', fontsize=14 )
-    ax5.legend()
-    fig5.savefig('figures/state_near_far.png', transparent=True )
-    fig5.show()
+    # fig5 = plt.figure()
+    # ax5 = fig5.gca()
+    # ax5.plot( a, 'b-', lw=2, label='Far from transition' )
+    # ax5.plot( b, 'r--', lw=2, label='Near transition' )
+    # ax5.set_xlabel( r'$t$ (time step in window)', fontsize=14 )
+    # ax5.set_ylabel( r'$x(t)$', fontsize=14 )
+    # ax5.legend()
+    # fig5.savefig('figures/state_near_far.png', transparent=True )
+    # fig5.show()
 
-    # # compute persistence diagrams
-    # window1 = timeseries.Window( a )
-    # window2 = timeseries.Window( b )
 
-    # vrfile = './data/sadde_'
-    # window1.convert2perseus( vrfile + 'far.txt', stepsize=0.0005, nsteps=50 )
-    # window2.convert2perseus( vrfile + 'near.txt', stepsize=0.0005, nsteps=50 ) 
+    # Wasserstein P
+    p = 2
+    
+    # compute persistence diagrams
+    window1 = timeseries.Window( a )
+    window2 = timeseries.Window( b )
+    window3 = timeseries.Window( c )
+    window4 = timeseries.Window( d )
 
-    # # make the diagrams
-    # window1.compute_persistence( vrfile + 'far.txt' )
-    # window2.compute_persistence( vrfile + 'near.txt' )
+    vrfile = '../data/sadde_'
+    test = 'bottleneck1'
+    window1.convert2perseus( vrfile + 'far_'+test+'.txt', stepsize=0.0005, nsteps=50 )
+    window2.convert2perseus( vrfile + 'near_'+test+'.txt', stepsize=0.0005, nsteps=50 ) 
+
+    # make the diagrams
+    window1.compute_persistence( vrfile + 'far_'+test+'.txt' )
+    window2.compute_persistence( vrfile + 'near_'+test+'.txt' )
+
+    print "Bottleneck distance:"
+    print float (window1.compute_bottleneck_distance( window2.perspath ) )
+
+    print "Wasserstein distance:"
+    print float (window1.compute_wasserstein_distance( window2.perspath, p=p ) )
+    print ""
+    print "-----"
+    print ""
+    # NEXT TO THE BIFURCATION FOR WINDOW C AND D
+    vrfile = '../data/sadde_'
+    test = 'bottleneck2'
+    window3.convert2perseus( vrfile + 'far_'+test+'.txt', stepsize=0.0005, nsteps=50 )
+    window4.convert2perseus( vrfile + 'near_'+test+'.txt', stepsize=0.0005, nsteps=50 ) 
+
+    # make the diagrams
+    window3.compute_persistence( vrfile + 'far_'+test+'.txt' )
+    window4.compute_persistence( vrfile + 'near_'+test+'.txt' )
+
+    print "Bottleneck distance:"
+    print float (window3.compute_bottleneck_distance( window4.perspath ) )
+
+    print "Wasserstein distance:"
+    print float (window3.compute_wasserstein_distance( window4.perspath, p=p ) )
 
     # # plot the diagrams
     # f1 = window1.draw_diagram( vrfile + 'far_0.txt', scale=True, marker_scale=0.05 )

@@ -194,7 +194,7 @@ class Window( Timeseries ):
             print "subprocess returned an error!"
         return dist
 
-    def compute_wasserstein_distance( self, other, this_dia=None ):
+    def compute_wasserstein_distance( self, other, this_dia=None, p=1 ):
         """Compute the Wasserstein distance between self.persdia and other.
 
         Diagram for this Window object must have been computed
@@ -211,7 +211,7 @@ class Window( Timeseries ):
         this_dia += '_' + str(self.diagram_dim) + '.txt'
         other += '_' + str(self.diagram_dim) + '.txt'
         try:
-            dist = sp.check_output( ["wasserstein", this_dia, other] )
+            dist = sp.check_output( ["wasserstein", this_dia, other, str(p)] )
         except:
             print "subprocess returned an error!"
         return dist

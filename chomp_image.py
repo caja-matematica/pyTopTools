@@ -297,8 +297,9 @@ def mse_converter( fname ):
                 if line.startswith('m'):
                     continue
                 # strip off \n and split on tabs
-                line = line.strip().split( '\t' )
+                line = line.strip().split()
                 lines.append( ( float(line[0]), float(line[1]) ) )
+
     return numpy.array( lines )
 
 def test( fname, chomp_fname ):

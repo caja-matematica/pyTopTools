@@ -115,6 +115,8 @@ def birth_times_hist2( old_path, new_path, save_prefix, gen_num,
     with open( old_path ) as fh:
         old = pkl.load(fh)
 
+    return new, old
+
     # if not ( old_single is None or new_single is None ):
     #     ##########
     #     # load single cells

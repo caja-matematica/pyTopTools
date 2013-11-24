@@ -12,14 +12,18 @@ import numpy as np
 from random import gauss
 from math import sqrt
 import matplotlib.pyplot as plt
-from pyTopTools import timeseries
+#from pyTopTools import timeseries
 
 
 def euler_maruyama( f, g, dt, x, lam, sigma ):
     """
+    Euler-Maruyama integrator.
+
     dX = f( x, lam )dt + g( x, sigma )dW
+
+    f ang g must be function handles.
     
-    args = [ x (spatial), lam (parameter), noise (sigma) ]
+    args = x (spatial), lam (parameter), noise level (sigma) 
     """
     return x + dt * f( x, lam ) + sqrt( dt ) * gauss( 0, 1 ) * g( x, sigma )
 
@@ -63,7 +67,6 @@ def sde_integrator( f, g, h, tmax=10000, xinit=-2, dt=0.01,
     h = lambda x, lam : 0.001  #* x 
     
     """    
-    #transient = int( 0.5 * tmax/dt )
     tvec, xvec, lamvec = integrate( f, g, h, xinit, tmax, dt,
                                     lam0=lam0, sigma=sigma )
     return tvec, xvec, lamvec
@@ -90,6 +93,8 @@ if __name__ == "__main__":
     dt = 0.01
     sigma = 0.2
     lam0 = -4
+
+    # trim off portion of orbit far from attractor
     transient = int( 0.5 * tmax/dt )
 
     tvec, xvec, lamvec = integrate( f, g, h, xinit, tmax, dt,
@@ -110,16 +115,16 @@ if __name__ == "__main__":
     # fig2.show()
 
     # far from bifurcation
-    i0 = int( 2020 / dt )
-    i1 = int( 2050 / dt )
-    a = np.array( xvec[ i0 : i1 ] )
-    a -= a.mean()
+    # i0 = int( 2020 / dt )
+    # i1 = int( 2050 / dt )
+    # a = np.array( xvec[ i0 : i1 ] )
+    # a -= a.mean()
 
     # right next to bifurcation
-    j0 = int( 9370 / dt )
-    j1 = int( 9400 / dt )
-    b = np.array( xvec[ j0 : j1 ] )
-    b -= b.mean()
+    # j0 = int( 9370 / dt )
+    # j1 = int( 9400 / dt )
+    # b = np.array( xvec[ j0 : j1 ] )
+    # b -= b.mean()
 
     # fig3 = plt.figure()
     # ax3 = fig3.gca()
@@ -137,15 +142,15 @@ if __name__ == "__main__":
     # fig4.savefig('figures/state_distribution_near_bif.png', transparent=True )
     # fig4.show()
 
-    fig5 = plt.figure()
-    ax5 = fig5.gca()
-    ax5.plot( a, 'b-', lw=2, label='Far from transition' )
-    ax5.plot( b, 'r--', lw=2, label='Near transition' )
-    ax5.set_xlabel( r'$t$ (time step in window)', fontsize=14 )
-    ax5.set_ylabel( r'$x(t)$', fontsize=14 )
-    ax5.legend()
-    fig5.savefig('figures/state_near_far.png', transparent=True )
-    fig5.show()
+    # fig5 = plt.figure()
+    # ax5 = fig5.gca()
+    # ax5.plot( a, 'b-', lw=2, label='Far from transition' )
+    # ax5.plot( b, 'r--', lw=2, label='Near transition' )
+    # ax5.set_xlabel( r'$t$ (time step in window)', fontsize=14 )
+    # ax5.set_ylabel( r'$x(t)$', fontsize=14 )
+    # ax5.legend()
+    # fig5.savefig('figures/state_near_far.png', transparent=True )
+    # fig5.show()
 
     # # compute persistence diagrams
     # window1 = timeseries.Window( a )

@@ -116,6 +116,7 @@ while w0 < w1:
     current_window.compute_persistence( persin )
     print "time to compute PD: ", time.time() - t0
 
+
     # if not the first window, compute d(D1,D2)
     if previous_window is not None:
         t0 = time.time()

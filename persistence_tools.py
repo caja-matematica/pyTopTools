@@ -3,7 +3,7 @@ import subprocess as sp
 import matplotlib.pyplot as plt
 import npy2perseus as n2p
 import perseus_wrap as pers
-
+import scipy.io as sio
 """
 Module for handling time series and ndarrays for persistence analysis.
 
@@ -170,7 +170,6 @@ def diagrams2cellarray( dia_list, outname, chop_inf=True, mat_type=np.float ):
     Recipe from http://docs.scipy.org/doc/scipy/reference/tutorial/io.html#matlab-cell-arrays
 
     """
-    import scipy.io as sio
     n = len( dia_list )
     # object array to hold different length diagrams. Exclude the last
     # (inf) generator if chop_inf==True.
@@ -185,3 +184,33 @@ def diagrams2cellarray( dia_list, outname, chop_inf=True, mat_type=np.float ):
         C[i] = d
     sio.savemat( outname+'.mat', { 'diagrams': C } )
     
+def cellarray2diagrams( matfile, matname='means' ):
+    """
+    Read in a matlab file containing a cell array. 
+    
+    matfile : path to .mat file
+
+    Optional:
+    --------
+
+    matname : name of stored variable. Default = 'means'
+
+    Returns dictionary of { 'cell' : mean diagram }
+    """
+    
+    cellarray = sio.loadmat( matfile )
+    
+    # N x 2 object array, with dict key in first column and dict value
+    # an Mx2 array in second column. 
+    mat = cellarray[ matname ]
+    mdict = dict()
+    
+    # line up key/value pairs as a dict
+    for name, arr in mat:
+        # convert from unicode -> ascii
+        name = name.item()
+        cell = name.encode( 'ascii' )
+        mdict[ cell ] = arr
+
+    return mdict
+

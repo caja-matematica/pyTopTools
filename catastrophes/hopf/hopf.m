@@ -3,7 +3,7 @@
 % sigma = the intensity of the noise
 % M. Gidea 2011 
 t0 = 0;
-tfinal = 100;
+tfinal = 2000;
 stepsize=0.1;
 steps=floor((tfinal-t0)/stepsize);
 x0 = 0.1; 
@@ -11,6 +11,7 @@ y0 = 0.1;
 sigma=0.1;
 mu1 = -3;
 mu2 = 0;
+mu_rate = 1500;
 %mu0 = 0;
 % Euler method for stochastic ODE 
 x=zeros(steps,1);
@@ -25,7 +26,8 @@ for k = 1:1:steps,
 x(k+1)=x(k)+stepsize*(mu(k)*x(k)-y(k)-x(k)*y(k)*y(k))+sigma*randn*sqrt(stepsize);  
 y(k+1)=y(k)+stepsize*(x(k)+mu(k)*y(k)-y(k)*y(k)*y(k))+sigma*randn*sqrt(stepsize);
 t(k+1)=t(k)+stepsize;
-mu(k+1)=((t(k+1)-t0)/(tfinal-t0))*(mu2-mu1)+mu1;   
+%mu(k+1)=((t(k+1)-t0)/(tfinal-t0))*(mu2-mu1)+mu1;
+mu(k+1)=((t(k+1)-t0)/mu_rate)*(mu2-mu1)+mu1;
 end
 subplot(1,2,1)
 % The plot coordinates are x and y
@@ -38,3 +40,6 @@ title('Bifurcation diagram')
 z=[mu(:), x(:)];
 % Write data in the file hopf.txt 
 dlmwrite('hopf.txt',z)
+
+figure;
+plot(t,x);

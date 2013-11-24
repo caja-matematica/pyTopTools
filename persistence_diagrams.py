@@ -40,27 +40,27 @@ class Diagram( object ):
         if hasattr( diagram, '__array__' ):
             fh = tempfile.NamedTemporaryFile(delete=False)
             np.savetxt( fh, diagram )
-            self.data = diagram
-            self.diagram = fh.name
-        else:
+            self.dname = fh.name
             self.diagram = diagram
+        else:
+            self.dname = diagram
             # in case we need the data for other applications
-            self.data = np.loadtxt( diagram )
+            self.diagram = np.loadtxt( diagram )
         
         # the 'infinite' value usually comes from the maximum number
         # of steps in growing epsilon balls (say). If we don't have
         # this, then set inf to be the max death time +1
         if inf == None:
-            self.inf_value = max( self.data[:,1] ) + 1
+            try:
+                self.inf_value = max( self.diagram[:,1] ) + 1
+            # if diagram is empty
+            except ValueError:
+                self.inf_value = 0
 
-        if dim is None:
-            idx = self.diagram.rfind( '.' )
-            self.diagram_dim = int( self.diagram[idx-1] )
-        else:
-            self.diagram_dim = dim
+        self.diagram_dim = dim
 
     def __repr__( self ):
-        s = "Persistence diagram with "+ str( len( self.data ) )+\
+        s = "Persistence diagram with "+ str( len( self.diagram ) )+\
             " generators in dimension "+ str( self.diagram_dim )
         return s
 
@@ -79,10 +79,12 @@ class Diagram( object ):
         engine refers to either Miro's code ('c') or Kelly's
         ('python'). Not implemented.
         """
-        this_dia = self.diagram
+        # we need the name of the diagram file on disk for the
+        # distance code
+        this_dia = self.dname
         # grab the filename of the diagram if necessary
-        if hasattr( other, 'diagram' ):
-            other = other.diagram 
+        if hasattr( other, 'dname' ):
+            other = other.dname 
         try:
             dist = sp.check_output( ["bottleneck", this_dia, other] )
         except:
@@ -100,10 +102,10 @@ class Diagram( object ):
 
         other : path to persdia file
         """
-        this_dia = self.diagram
+        this_dia = self.dname
         # grab the filename of the diagram if necessary
-        if hasattr( other, 'diagram' ):
-            other = other.diagram 
+        if hasattr( other, 'dname' ):
+            other = other.dname 
         try:
             dist = sp.check_output( ["wasserstein", this_dia, other] )
         except:
@@ -124,7 +126,7 @@ class Diagram( object ):
 
         """
         if scale:
-            fig = plot_diagram_scaled( self.data, scale=scale, fig=fig,
+            fig = plot_diagram_scaled( self.diagram, scale=scale, fig=fig,
                                        inf_value=self.inf_value, **args )
         # if not scale:
         #     fig = pers.plot_diagram( fname, fig=fig, **args )
@@ -240,6 +242,9 @@ def plot_diagram_scaled( diagram, fontsize=12, scale=None, color='b',
     ax.set_xlabel( 'birth', fontsize=fontsize )
     ax.set_ylabel( 'death', fontsize=fontsize )
     # fix the left x-axis boundary at 0
+
+    maxd = 3800 # quick fix for multiple diagrams
+
     ax.set_xlim( left=0, right=maxd+2 )
     ax.set_ylim( bottom=0, top=maxd+2 )
 

@@ -22,7 +22,7 @@ old_cells = [ 'old_100125', 'old_50125', 'old_90125' ]
 lifespans = True
 top = True
 
-gens = [1,2]#,3,4]
+gens = [1,2,,3#,4]
 val = 40  # lower bound shouldn't matter, so just grab the lb=40 file
 
 ts_new = {}
